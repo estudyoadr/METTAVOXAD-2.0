@@ -83,13 +83,9 @@ if(METTAVOXAD_BUILD_LEGACY)
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/mettavoxad_artefacts/$<CONFIG>/VST"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/mettavoxad_artefacts/$<CONFIG>/VST")
     if(MSVC)
-        # Explicit exports for both MSVC architectures; do not depend on .def handling.
-        if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            target_link_options(mettavoxad_Legacy PRIVATE
-                "/EXPORT:VSTPluginMain=_VSTPluginMain" "/EXPORT:main=_VSTPluginMain")
-        else()
-            target_link_options(mettavoxad_Legacy PRIVATE "/EXPORT:main=VSTPluginMain")
-        endif()
+        # LINK resolves C symbol decoration for x86; keep aliases undecorated.
+        target_link_options(mettavoxad_Legacy PRIVATE
+            "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/Source/LegacyVst.def")
     endif()
 endif()
 if(METTAVOXAD_BUILD_LEGACY)
