@@ -1,0 +1,89 @@
+name: METTAVOXAD 2.1 - Windows x86 + x64 and Linux
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            platform: Win32
+          - arch: x64
+            platform: x64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        shell: pwsh
+        run: |
+          cmake -S . -B build_${{ matrix.arch }} -G "Visual Studio 17 2022" -A ${{ matrix.platform }}
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile DLL and VST3
+        shell: pwsh
+        run: |
+          cmake --build build_${{ matrix.arch }} --config Release --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check native DLL and audio/state lifecycle
+        shell: pwsh
+        run: |
+          cmake --build build_${{ matrix.arch }} --config Release --target legacy_smoke dsp_checks
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "build_${{ matrix.arch }}/Release/legacy_smoke.exe" "build_${{ matrix.arch }}/mettavoxad_artefacts/Release/VST/METTAVOXAD21.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: DSP and UI checks
+        shell: pwsh
+        run: |
+          & "build_${{ matrix.arch }}/Release/dsp_checks.exe" "previews_${{ matrix.arch }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build EXE installer
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (!(Test-Path $iscc)) { $iscc = Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe' }
+          if (!(Test-Path $iscc)) { throw "Inno Setup 6 not installed on this runner" }
+          & $iscc "/DPluginArch=${{ matrix.arch }}" "Installer/Windows/mettavoxad_setup.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify installer upgrade and old version removal
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (!(Test-Path $iscc)) { $iscc = Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe' }
+          ./Tests/InstallerUpgrade.ps1 -Architecture ${{ matrix.arch }} -Iscc $iscc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: METTAVOXAD21-upgrade-logs-${{ matrix.arch }}
+          path: ${{ runner.temp }}/mettavoxad_upgrade_${{ matrix.arch }}/*.log
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: METTAVOXAD21-Windows-${{ matrix.arch }}
+          path: |
+            previews_${{ matrix.arch }}/*.png
+            Installer/Windows/Output/*.exe
+            build_${{ matrix.arch }}/mettavoxad_artefacts/Release/VST/*.dll
+            build_${{ matrix.arch }}/mettavoxad_artefacts/Release/VST3/
+          if-no-files-found: error
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config libasound2-dev libfreetype6-dev libfontconfig1-dev libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libxcomposite-dev libgl1-mesa-dev
+      - name: Compile
+        run: |
+          cmake -S . -B build_linux -DCMAKE_BUILD_TYPE=Release -DMETTAVOXAD_BUILD_LEGACY=OFF
+          cmake --build build_linux --config Release --parallel 2
+          tar -czf mettavoxad_linux_vst3.tar.gz -C build_linux/mettavoxad_artefacts/Release/VST3 .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: METTAVOXAD21-Linux-x64
+          path: mettavoxad_linux_vst3.tar.gz
+          if-no-files-found: error
