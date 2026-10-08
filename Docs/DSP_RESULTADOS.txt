@@ -1,0 +1,485 @@
+Autotune control 0 difference 0.0871601
+PASS: Autotune knob changes voiced audio
+Autotune control 1 difference 0.0846158
+PASS: Autotune knob changes voiced audio
+Autotune control 2 difference 0.0801262
+PASS: Autotune knob changes voiced audio
+Autotune control 3 difference 0.0802286
+PASS: Autotune knob changes voiced audio
+Autotune control 4 difference 0.0871601
+PASS: Autotune knob changes voiced audio
+Autotune control 5 difference 0.0296783
+PASS: Autotune knob changes voiced audio
+Autotune control 6 difference 0.0723025
+PASS: Autotune knob changes voiced audio
+Autotune control 7 difference 0.0774779
+PASS: Autotune knob changes voiced audio
+Robot control 0 difference 0.0944042
+PASS: Robot knob changes voiced audio
+Robot control 1 difference 0.0406366
+PASS: Robot knob changes voiced audio
+Robot control 2 difference 0.0472773
+PASS: Robot knob changes voiced audio
+Robot control 3 difference 0.0232673
+PASS: Robot knob changes voiced audio
+Robot control 4 difference 0.0969865
+PASS: Robot knob changes voiced audio
+Robot control 5 difference 0.0715076
+PASS: Robot knob changes voiced audio
+Robot control 6 difference 0.0256178
+PASS: Robot knob changes voiced audio
+Robot control 7 difference 0.0341225
+PASS: Robot knob changes voiced audio
+PASS: Three robotic architectures sound different
+PASS: Robot remains silent without voice input
+PASS: Each module has six specific presets
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Each module has six specific presets
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Each module has six specific presets
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Each module has six specific presets
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: Specific preset produces audible finite output in SOLO
+PASS: Module preset selection retained
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: All sixteen module combinations produce finite audio
+PASS: Module presets persist in saved state
+PASS: Pitch detection 225 Hz at 44.1/48/96 kHz
+PASS: Pitch detection 225 Hz at 44.1/48/96 kHz
+PASS: Pitch detection 225 Hz at 44.1/48/96 kHz
+Corrected peak: 219.727 Hz, target 220 Hz
+PASS: Autotune corrects detuned A to 220 Hz
+PASS: Minor scale selects C across the octave boundary
+PASS: Autotune OFF is transparent
+Robot mode 1 RMS 0.141487, peak 262.207 Hz
+PASS: Robotic synthesis changes the source spectral pitch
+PASS: Robot output has controlled gain
+PASS: Robot effect changes the source audio
+PASS: Vocoder/Hematron produces audible non-silent audio
+PASS: Robot zero mix is transparent
+Robot mode 2 RMS 0.13632, peak 196.289 Hz
+PASS: Robotic synthesis changes the source spectral pitch
+PASS: Robot output has controlled gain
+PASS: Robot effect changes the source audio
+PASS: Vocoder/Hematron produces audible non-silent audio
+PASS: Robot zero mix is transparent
+Robot mode 3 RMS 0.140919, peak 260.742 Hz
+PASS: Robotic synthesis changes the source spectral pitch
+PASS: Robot output has controlled gain
+PASS: Robot effect changes the source audio
+PASS: Vocoder/Hematron produces audible non-silent audio
+PASS: Robot zero mix is transparent
+PASS: Harmony changes the audio
+PASS: Master respects the selected ceiling
+PASS: vocalOn
+PASS: atOn
+PASS: masterOn
+PASS: vocOn
+PASS: All tab switches OFF bypass all processing
+PASS: vocMode
+PASS: vocMix
+PASS: vocOn
+PASS: Vocoder reaches final processor output
+PASS: vocMode
+PASS: Hematron reaches final processor output
+PASS: vocOn
+PASS: atOn
+PASS: atAmount
+PASS: atSpeed
+PASS: atScale
+PASS: atHumanise
+PASS: Autotune reaches final processor output
+PASS: atOn
+PASS: vocalOn
+PASS: qualityOversample
+PASS: HQ oversampling processes audio and reports latency
+PASS: globalBypass
+PASS: Global bypass is transparent and removes processing latency
+PASS: vocalOn
+PASS: vocOn
+PASS: vocOn
+PASS: Tab switch persists in saved state
+PASS: globalBypass
+PASS: vocalOn
+PASS: atOn
+PASS: masterOn
+PASS: vocOn
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Choice menu populated
+PASS: Tab preset menu has six specific choices
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Choice menu populated
+PASS: Tab preset menu has six specific choices
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Choice menu populated
+PASS: Tab preset menu has six specific choices
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Numeric control is a rotary knob
+PASS: Choice menu populated
+PASS: Tab preset menu has six specific choices
+PASS: Choice menu populated
+PASS: All choice controls and 32 knobs exist
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Tab preview rendered
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Tab preview rendered
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Tab preview rendered
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Visible control stays inside editor
+PASS: Tab preview rendered
+PASS: atAmount
+PASS: atSpeed
+PASS: atHumanise
+PASS: atScale
+PASS: Moving Autotune GUI knob updates the audio parameter
+PASS: GUI SOLO isolates Autotune
+PASS: Moving Autotune GUI knob transposes final audio by four semitones
+PASS: Moving Robot GUI knob updates the audio parameter
+PASS: Moving Robot GUI control and SOLO changes final audio
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+PASS: Control fits the minimum editor size
+ALL CHECKS PASSED

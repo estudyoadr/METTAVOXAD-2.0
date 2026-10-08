@@ -1,0 +1,25 @@
+METTAVOXAD 2.1.0 — pacote de codigo para compilar
+
+1. Leia Docs/PASSO_A_PASSO_WINDOWS.md.
+2. Compile pelo GitHub Actions ou execute COMPILAR_WINDOWS.ps1 no PowerShell.
+3. Os instaladores EXE ficam em Installer/Windows/Output.
+4. Feche Sound Forge e os outros programas de audio antes de instalar.
+5. Sound Forge 8: use o instalador x86 e a DLL METTAVOXAD21.dll,
+   mesmo quando o Windows e de 64 bits. Configure a pasta VST2 no host.
+6. Para hosts de 64 bits, use o instalador x64. Ambos podem coexistir.
+7. Refaça a busca de plugins e escolha METTAVOXAD 2.1 / METTAVOXAD21.
+
+ATUALIZACAO: o EXE atualiza a instalacao 2.0.1 da mesma arquitetura;
+remove os arquivos antigos conhecidos e o registro da 2.0.0 x64 quando
+seu desinstalador esta disponivel. Copias manuais em outras pastas devem
+ser removidas manualmente: o instalador nao varre o computador inteiro.
+Projetos antigos podem exigir reinserir o plugin: a nova versao tem ID proprio.
+
+Este ZIP contem codigo-fonte, nao instaladores ja compilados.
+Cada aba possui 8 controles giratorios e 6 presets especificos.
+Os interruptores no topo combinam os modulos. SOLO deixa apenas um ativo.
+BYPASS GLOBAL devolve o audio original. Escolha um preset e use SOLO
+para avaliar Autotune ou Voz Robo sem interferencia das outras abas.
+
+
+Limpeza adicional: o instalador remove as DLLs antigas conhecidas do BAT 1.1 nas pastas padrão Steinberg/VSTPlugins, Sony, Sonic Foundry, Common Files/VST2, no caminho VST registrado por arquitetura e na pasta mettavoxad_VST_Plugins da Área de Trabalho. Só os nomes conhecidos do METTAVOXAD são removidos. Cópias em outros locais continuam exigindo remoção manual.

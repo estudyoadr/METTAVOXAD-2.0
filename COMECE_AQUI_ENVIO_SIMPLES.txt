@@ -1,0 +1,19 @@
+ENVIO SIMPLES — UM ZIP NO GITHUB
+
+A causa da falha no commit 23bd6af do repositorio METTAVOXAD-2.0:
+o repositorio tinha SOMENTE o workflow. O codigo-fonte estava ausente.
+Nao precisa apagar o repositorio nem a pasta no computador.
+
+1. No repositorio METTAVOXAD-2.0, clique Add file > Upload files.
+2. Envie o proprio METTAVOXAD_2.1.0_ENVIO_SIMPLES.zip, SEM extrair.
+3. Clique Commit changes para concluir o envio.
+4. No computador, extraia uma copia do ZIP para abrir COPIAR_WORKFLOW_GITHUB.txt.
+5. No GitHub, abra .github/workflows/build_vst3_windows_linux.yml e clique no lapis.
+6. Substitua TODO o conteudo pelo texto de COPIAR_WORKFLOW_GITHUB.txt DESTE pacote.
+7. Salve em Commit changes. Essa alteracao inicia uma NOVA compilacao.
+8. Aguarde Windows x86/x64. Baixe os artifacts Windows quando terminarem verdes.
+
+O workflow extrai o ZIP automaticamente e confere os arquivos antes de compilar.
+Nao e necessario enviar Source, Tests e Installer individualmente neste modo.
+Nao use Re-run da execucao antiga. Ela usa o estado antigo do repositorio.
+Sound Forge 8 utiliza instalador x86, mesmo no Windows de 64 bits.

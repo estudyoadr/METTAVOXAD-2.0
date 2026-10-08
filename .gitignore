@@ -1,0 +1,5 @@
+build*/
+JUCE/
+previews_*/
+Installer/Windows/Output/
+*.zip

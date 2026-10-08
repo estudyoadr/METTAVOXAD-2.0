@@ -1,0 +1,20 @@
+METTAVOXAD 2.1.0
+
+- Autotune e Voz Robo agora seguem o mesmo padrao de oito knobs neon das outras abas.
+- Quatro interruptores ON/OFF e quatro botoes SOLO sempre no topo.
+- Seis presets exclusivos por aba; 24 presets modulares no total.
+- Autotune: intensidade, velocidade, transposicao, humanizacao, mistura,
+  saida, tonalidade e escala ligados ao processamento.
+- Robo: novo motor de 24 bandas, tres arquiteturas, textura, formantes,
+  portadora, largura e espaco. Timbre mais rico e transformacao espectral testada.
+- Ganho Vocal movido antes de Robo e Master para respeitar a cadeia e o teto.
+- Novos nome/ID METTAVOXAD21 para diferenciar do plugin antigo no host.
+- Instaladores x86/x64 atualizam a 2.0.1 da mesma arquitetura, removem
+  arquivos antigos conhecidos, desinstalam a 2.0.0 registrada (x64) e limpam
+  os destinos conhecidos do BAT 1.1. Copias manuais desconhecidas exigem
+  remocao manual. Instale as duas arquiteturas se usar hosts de ambos os tipos.
+- Testes de audio, interface e atualizacao do EXE integrados ao GitHub Actions.
+- COPIAR_WORKFLOW_GITHUB.txt permite criar .github/workflows pela interface web.
+
+Leia Docs/PASSO_A_PASSO_WINDOWS.md. O ZIP e um pacote para COMPILAR;
+nao contem EXEs Windows precompilados. Resultados e limites em Docs/VALIDACAO.md.

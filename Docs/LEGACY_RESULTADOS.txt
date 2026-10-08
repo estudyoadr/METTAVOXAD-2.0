@@ -1,0 +1,1 @@
+PASS: native ABI, exports, parameters, state, audio, lifecycle

@@ -1,0 +1,16 @@
+CORRECAO DA FALHA "Missing main alias"
+
+O workflow antigo usa "mettavoxad 2.0.dll". A versao 2.1 gera
+"METTAVOXAD21.dll". Misturar os arquivos faz o teste procurar outra DLL.
+O teste antigo apresentava "Missing main alias" mesmo se a DLL nao abrisse.
+
+1. Substitua CMakeLists.txt e as pastas Source, Tests, Installer e Docs
+   pelos arquivos deste pacote, na raiz do repositorio.
+2. Abra .github/workflows/build_vst3_windows_linux.yml no GitHub e edite.
+3. Substitua TODO o conteudo pelo de COPIAR_WORKFLOW_GITHUB.txt.
+4. Salve. Em Actions, o nome deve ser "METTAVOXAD 2.1 - Windows x86 + x64 and Linux".
+5. Execute NOVO workflow (nao use Re-run da execucao antiga).
+
+O link MSVC agora exporta main e VSTPluginMain explicitamente em x86/x64.
+O teste diferencia DLL ausente/arquitetura errada de exportacao ausente.
+Teste de audio/interface em Linux foi preservado. Windows precisa da nova execucao.
