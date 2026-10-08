@@ -16,13 +16,17 @@
 
 Os registros completos ficam em DSP_RESULTADOS.txt e LEGACY_RESULTADOS.txt. Os testes usam sinais sintéticos: não substituem avaliação auditiva de uma locução real.
 
-## Preparado para execução no GitHub Actions Windows
+## Executado no GitHub Actions Windows em 08/10/2026
 
-O workflow compila MSVC Win32 e x64, executa os testes de áudio/interface e da DLL, compila os instaladores Inno Setup e executa Tests/InstallerUpgrade.ps1. Esse teste só roda no GitHub Actions: instala versões anteriores de teste, atualiza para 2.1.0 e verifica remoção de DLLs/bundles antigos, atualização do registro e preservação de um plugin vizinho. Os logs são disponibilizados como artifacts.
+Execução: https://github.com/estudyoadr/METTAVOXAD-2.0/actions/runs/37713912663
+Código validado: ced65acd1bfbf31785fa96aa60d302daae8fdf00.
 
-Essa etapa Windows NÃO foi executada neste ambiente. O EXE e a remoção da instalação anterior precisam dessa validação em Windows; o Sound Forge 8 também precisa de teste no host real. Não há certificado de assinatura neste pacote, nem garantia de ausência de alertas do Windows. O passo a passo explica compilação e assinatura opcional.
+As matrizes MSVC Win32 e x64 concluíram com sucesso: compilação da DLL VST legado e VST3, carregamento da DLL e ciclo de áudio/estado, testes de DSP e interface, criação dos instaladores EXE e teste de atualização de instalação.
 
+Tests/InstallerUpgrade.ps1 instalou versões anteriores de teste, atualizou para 2.1.0 e verificou remoção de DLLs/bundles antigos, atualização do registro e preservação de um plugin vizinho. Os logs estão nos artifacts de cada arquitetura. O teste cobre as instalações e caminhos conhecidos; não faz uma busca indiscriminada por arquivos no computador.
 
-## Correção após o print do GitHub
+O Sound Forge 8 ainda precisa de teste no host real, usando a DLL x86 mesmo em Windows de 64 bits. Não há certificado de assinatura neste pacote, nem garantia de ausência de alertas do Windows. O passo a passo explica compilação e assinatura opcional.
 
-Link MSVC com exportações explícitas `main` e `VSTPluginMain` para x86/x64. O teste agora diferencia falha ao carregar a DLL e exportação ausente. O workflow usa `METTAVOXAD21.dll`, e seu nome é METTAVOXAD 2.1. Não repetir execuções antigas com código anterior. O teste nativo Linux foi recompilado e passou após essa correção; os novos flags MSVC ainda precisam ser executados no Windows.
+## Correção das exportações Windows
+
+O linker MSVC usa Source/LegacyVst.def explicitamente para resolver a decoração dos símbolos e exportar main e VSTPluginMain em x86/x64. Os dois testes de carregamento da DLL passaram no Windows. O produto e a DLL usam o nome METTAVOXAD21 para diferenciar esta versão.
