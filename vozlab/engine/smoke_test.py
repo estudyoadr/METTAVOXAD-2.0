@@ -50,7 +50,7 @@ def main() -> int:
                 "id": "smoke-generate",
                 "command": "generate",
                 "voicePath": str(reference),
-                "text": "Olá, este é um teste curto de locução.",
+                "text": "Apesar da homenagem ao artista, a Águia de Ouro terminou a apuração em sétimo lugar na disputa pelo Grupo Especial do Carnaval de São Paulo. O desfile, no entanto, teve Benito de Paula como um dos destaques, celebrando sua história e sua contribuição para a música brasileira. Benito também participou do desfile da Mangueira em 2015, quando a escola levou um enredo em sua homenagem.",
                 "pace": 50,
                 "expression": 55,
                 "pauses": 45,
