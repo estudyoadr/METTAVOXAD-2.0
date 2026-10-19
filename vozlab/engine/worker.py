@@ -221,7 +221,7 @@ def generate(request: dict) -> dict:
     if not isinstance(raw_text, str):
         raise ValueError(f"O texto recebido pelo motor não é texto: {type(raw_text).__name__}.")
     # IPC on Windows must preserve accented Portuguese as Unicode text for the tokenizer.
-    text = unicodedata.normalize("NFC", raw_text).replace("\\x00", "").strip()
+    text = unicodedata.normalize("NFC", raw_text).replace(chr(0), "").strip()
     if not voice_path.is_file():
         raise ValueError("A gravação de referência desta voz não foi encontrada.")
     if not text:
@@ -256,7 +256,7 @@ def generate(request: dict) -> dict:
     audio_parts = []
     for index, sentence in enumerate(sentences, start=1):
         # Pass a built-in Unicode str even if a future splitter returns a string subclass.
-        sentence = unicodedata.normalize("NFC", str(sentence)).replace("\\x00", "")
+        sentence = unicodedata.normalize("NFC", str(sentence)).replace(chr(0), "")
         try:
             wav = model.generate(
                 sentence,
