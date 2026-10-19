@@ -43,7 +43,8 @@ jobs:
         run: |
           pyinstaller --noconfirm --clean --onedir --name VozLabEngine --distpath ../dist-engine --workpath ../build-engine `
             --collect-all chatterbox --collect-all perth --collect-all librosa `
-            --collect-all transformers --collect-all tokenizers --collect-all s3tokenizer `
+            --collect-submodules transformers.models.llama --collect-submodules transformers.models.gpt2 --collect-data transformers `
+            --collect-all tokenizers --collect-all s3tokenizer `
             --collect-all conformer --collect-all safetensors --collect-all huggingface_hub `
             --hidden-import torchaudio --hidden-import soundfile engine/worker.py
 
@@ -62,4 +63,3 @@ jobs:
           path: vozlab/dist/*.exe
           if-no-files-found: error
           retention-days: 30
-
