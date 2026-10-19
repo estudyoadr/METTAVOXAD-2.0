@@ -1,0 +1,24 @@
+{
+  "name": "vozlab-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Estúdio local de clonagem de voz com perfis e estilos de locução",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "br.vozlab.desktop",
+    "productName": "VOZLAB",
+    "directories": { "output": "dist" },
+    "files": ["electron/**/*", "ui/**/*", "package.json"],
+    "extraResources": [{ "from": "../dist-engine/VozLabEngine", "to": "engine" }],
+    "win": { "target": ["nsis"], "artifactName": "VOZLAB-Setup-${version}-${arch}.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true }
+  }
+}
