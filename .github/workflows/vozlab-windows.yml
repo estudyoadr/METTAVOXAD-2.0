@@ -45,6 +45,7 @@ jobs:
             --collect-all chatterbox --collect-all perth --collect-all librosa `
             --collect-all transformers --collect-all tokenizers --collect-all s3tokenizer `
             --collect-all conformer --collect-all safetensors --collect-all huggingface_hub `
+            --copy-metadata requests `
             --hidden-import torchaudio --hidden-import soundfile engine/worker.py
 
       - name: Instalar dependências
