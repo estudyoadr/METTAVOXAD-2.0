@@ -272,7 +272,7 @@ def generate(request: dict) -> dict:
             wav = model.generate(
                 sentence,
                 language_id="pt",
-                audio_prompt_path=str(reference_cache) if index == 1 else None,
+                audio_prompt_path=str(reference_cache),  # Keep every sentence conditioned on the selected voice.
                 exaggeration=exaggeration,
                 cfg_weight=cfg_weight,
             )
