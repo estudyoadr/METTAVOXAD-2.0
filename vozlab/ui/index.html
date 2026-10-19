@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080b16" />
+  <title>VOZLAB — Estúdio de voz</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="brand-mark">V<span>•</span></div>
+      <button class="rail-button active" aria-label="Estúdio" title="Estúdio">◉</button>
+      <button class="rail-button" aria-label="Perfis de voz" title="Perfis de voz">♬</button>
+      <button class="rail-button" aria-label="Biblioteca" title="Biblioteca">▤</button>
+      <div class="rail-spacer"></div>
+      <button class="rail-button" aria-label="Configurações" title="Configurações">⚙</button>
+      <div class="avatar">MA</div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow"><span class="live-dot"></span> ESTÚDIO LOCAL</div>
+          <h1>Vozes com a sua assinatura.</h1>
+        </div>
+        <div class="top-actions">
+          <span class="local-badge"><span class="shield">◆</span> ÁUDIO NO SEU COMPUTADOR</span>
+          <button class="icon-button" title="Ajuda" aria-label="Ajuda">?</button>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="studio-column">
+          <section class="card voice-card">
+            <div class="section-heading">
+              <div><div class="eyebrow">01 / IDENTIDADE</div><h2>Escolha a voz</h2></div>
+              <button id="addVoice" class="text-button">＋ Novo perfil</button>
+            </div>
+            <div class="voice-picker" id="voicePicker">
+              <button class="voice-option placeholder-voice selected" data-voice="Minha voz">
+                <span class="voice-orb blue"><span>MA</span></span>
+                <span class="voice-copy"><strong>Minha voz</strong><small>Aguardando gravação</small></span>
+                <span class="check">•</span>
+              </button>
+              <button class="voice-option add-voice-option" id="addVoiceTile">
+                <span class="add-orb">＋</span><span class="voice-copy"><strong>Adicionar voz</strong><small>Com autorização</small></span>
+              </button>
+            </div>
+            <div class="voice-foot"><span class="mini-wave">▂ ▄ ▆ ▃ ▇ ▄ ▂ ▅ ▃ ▆ ▂</span><span>Referência vocal selecionada</span><button id="manageVoice" class="tiny-link">Ver gravações</button></div>
+          </section>
+
+          <section class="card style-card">
+            <div class="section-heading">
+              <div><div class="eyebrow">02 / INTERPRETAÇÃO</div><h2>Escolha o estilo</h2></div>
+              <button id="saveStyle" class="text-button">♡ Salvar estilo</button>
+            </div>
+            <div class="style-grid" id="styleGrid">
+              <button class="style-option selected" data-style="Mercado"><span class="style-icon coral">↗</span><span><strong>Mercado</strong><small>Ágil · direto</small></span></button>
+              <button class="style-option" data-style="Institucional"><span class="style-icon violet">◈</span><span><strong>Institucional</strong><small>Seguro · pausado</small></span></button>
+              <button class="style-option" data-style="Documentário"><span class="style-icon cyan">◌</span><span><strong>Documentário</strong><small>Narrativo · profundo</small></span></button>
+              <button class="style-option" data-style="Rádio/TV"><span class="style-icon pink">⌁</span><span><strong>Rádio / TV</strong><small>Presença · clareza</small></span></button>
+              <button class="style-option" data-style="Impacto"><span class="style-icon red">✦</span><span><strong>Impacto</strong><small>Grave · marcante</small></span></button>
+              <button class="style-option custom-style" id="addStyle"><span class="add-orb small">＋</span><span><strong>Novo estilo</strong><small>Da sua gravação</small></span></button>
+            </div>
+            <div class="style-tuning">
+              <label>Ritmo <span id="paceValue">58%</span><input id="pace" type="range" min="0" max="100" value="58" /></label>
+              <label>Expressividade <span id="expressionValue">72%</span><input id="expression" type="range" min="0" max="100" value="72" /></label>
+              <label>Pausas <span id="pausesValue">42%</span><input id="pauses" type="range" min="0" max="100" value="42" /></label>
+            </div>
+          </section>
+
+          <section class="card script-card">
+            <div class="section-heading script-heading">
+              <div><div class="eyebrow">03 / TEXTO</div><h2>Escreva sua locução</h2></div>
+              <span class="counter" id="counter">0 caracteres</span>
+            </div>
+            <textarea id="script" maxlength="5000" placeholder="Digite ou cole o texto que deseja transformar em locução…&#10;&#10;Dica: use pontuação para orientar as pausas e a interpretação."></textarea>
+            <div class="script-footer"><span>Português · Brasil</span><span>As pausas acompanham a pontuação</span></div>
+          </section>
+
+          <div class="generate-row">
+            <div class="engine-status" id="engineStatus"><span class="status-ring" id="statusRing"></span><div><strong id="engineTitle">Verificando motor local…</strong><small id="engineDetail">A primeira configuração baixa os arquivos do modelo PT-BR.</small></div></div>
+            <button id="generate" class="generate-button" disabled><span>✦</span> Gerar locução</button>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="card waveform-card">
+            <div class="section-heading"><div><div class="eyebrow">MONITOR DE ÁUDIO</div><h2>Prévia</h2></div><span class="ready-tag" id="previewState"><i></i> AGUARDANDO</span></div>
+            <div class="wave-stage"><div class="wave-glow"></div><div class="waveform" aria-hidden="true"></div><button class="play-orb" id="playPreview" type="button" aria-label="Reproduzir prévia" disabled>▶</button><span class="timecode" id="timecode">00:00 <i></i> 00:00</span></div>
+            <audio id="previewAudio" hidden></audio>
+            <div class="preview-caption"><span class="preview-icon">♫</span><span><strong id="previewTitle">Nenhuma locução gerada</strong><small id="previewDetail">Seu áudio aparecerá aqui para ouvir e baixar.</small></span></div>
+            <button class="export-button" id="exportAudio" disabled>↓ &nbsp; Exportar WAV</button>
+          </section>
+
+          <section class="card profile-card">
+            <div class="eyebrow">PERFIS SALVOS</div>
+            <div class="profile-title"><h2>Seu espaço criativo</h2><span class="count-pill" id="savedCount">0</span></div>
+            <p>Guarde combinações de voz e interpretação para recuperar sua assinatura em um clique.</p>
+            <button id="openProfiles" class="outline-button">＋ &nbsp; Criar primeiro perfil</button>
+          </section>
+
+          <div class="privacy-note"><span>◈</span><p><strong>Privado por padrão.</strong> As gravações e os perfis ficam no seu computador.</p></div>
+        </aside>
+      </div>
+      <footer class="statusbar"><span>VOZLAB <i>0.1.0</i></span><span><b></b> PROCESSAMENTO LOCAL</span><span>MODELO: EM AVALIAÇÃO</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
