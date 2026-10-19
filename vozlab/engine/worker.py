@@ -12,6 +12,7 @@ import re
 import shutil
 import sys
 import traceback
+import unicodedata
 import uuid
 from pathlib import Path
 
@@ -216,7 +217,11 @@ def generate(request: dict) -> dict:
     import torch
 
     voice_path = Path(request.get("voicePath", ""))
-    text = str(request.get("text", "")).strip()
+    raw_text = request.get("text", "")
+    if not isinstance(raw_text, str):
+        raise ValueError(f"O texto recebido pelo motor não é texto: {type(raw_text).__name__}.")
+    # IPC on Windows must preserve accented Portuguese as Unicode text for the tokenizer.
+    text = unicodedata.normalize("NFC", raw_text).replace("\\x00", "").strip()
     if not voice_path.is_file():
         raise ValueError("A gravação de referência desta voz não foi encontrada.")
     if not text:
@@ -250,13 +255,24 @@ def generate(request: dict) -> dict:
     emit({"event": "progress", "phase": "generating", "message": "Gerando a locução…", "total": len(sentences)})
     audio_parts = []
     for index, sentence in enumerate(sentences, start=1):
-        wav = model.generate(
-            sentence,
-            language_id="pt",
-            audio_prompt_path=str(reference_cache) if index == 1 else None,
-            exaggeration=exaggeration,
-            cfg_weight=cfg_weight,
-        )
+        # Pass a built-in Unicode str even if a future splitter returns a string subclass.
+        sentence = unicodedata.normalize("NFC", str(sentence)).replace("\\x00", "")
+        try:
+            wav = model.generate(
+                sentence,
+                language_id="pt",
+                audio_prompt_path=str(reference_cache) if index == 1 else None,
+                exaggeration=exaggeration,
+                cfg_weight=cfg_weight,
+            )
+        except TypeError as exc:
+            if "TextInputSequence must be str" in str(exc):
+                excerpt = sentence[:80].replace("\\n", " ")
+                raise TypeError(
+                    f"O tokenizador rejeitou a frase {index}/{len(sentences)} "
+                    f"(tipo={type(sentence).__name__}, caracteres={len(sentence)}, início={excerpt!r})."
+                ) from exc
+            raise
         values = wav.squeeze().detach().cpu().numpy().astype(np.float32, copy=False)
         if values.size:
             audio_parts.append(values)
