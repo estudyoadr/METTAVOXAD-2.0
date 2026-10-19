@@ -3,3 +3,15 @@ JUCE/
 previews_*/
 Installer/Windows/Output/
 *.zip
+/upload/
+/voice_clone_inputs/
+/voice_profiles/
+/dist-engine/
+/build-engine/
+/vozlab/node_modules/
+/vozlab/dist/
+/vozlab/engine/__pycache__/
+*.wav
+*.mp3
+*.flac
+*.m4a
