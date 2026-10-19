@@ -1,0 +1,14 @@
+node_modules/
+dist/
+release/
+__pycache__/
+*.py[cod]
+build-engine/
+dist-engine/
+*.spec
+voice_clone_inputs/
+voice_profiles/
+*.wav
+*.mp3
+*.flac
+*.m4a
