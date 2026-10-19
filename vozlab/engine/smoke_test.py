@@ -57,7 +57,7 @@ def main() -> int:
         environment["VOZLAB_DATA_DIR"] = data_dir
         process = subprocess.Popen(
             [str(executable)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, text=True, encoding="utf-8", env=environment,
+            stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace", env=environment,
         )
         try:
             stdout, stderr = process.communicate(
