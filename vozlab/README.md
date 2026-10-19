@@ -20,7 +20,7 @@ As quatro gravações enviadas para o projeto são referências de estilo: anima
 
 ## Perfis e prévia antes de salvar
 
-Ao criar ou substituir um perfil, o app gera uma frase curta com a gravação escolhida. Você precisa ouvir a prévia antes de habilitar **Salvar perfil**. O perfil atual continua intacto até a nova gravação ser aprovada; depois pode ser renomeado, ter a gravação trocada ou ser excluído. O botão de parar interrompe a reprodução.
+Cada perfil representa uma identidade vocal, por exemplo **Clone Mariano** ou **Clone Edna**. Depois de selecionar a identidade, os estilos **Varejo, Impacto, Documentário, Institucional** e **Rádio/TV** definem como ela interpreta o texto; estilos personalizados ficam vinculados ao clone selecionado. Ao criar ou substituir um perfil, o app gera uma frase curta com a gravação escolhida. Você precisa ouvir a prévia antes de habilitar **Salvar perfil**. O perfil atual continua intacto até a nova gravação ser aprovada; depois pode ser renomeado, ter a gravação trocada ou ser excluído. O botão de parar interrompe a reprodução.
 
 A prévia usa o mesmo motor PT-BR da locução final. Ela não é uma promessa de fidelidade: serve para você rejeitar uma gravação de referência que não tenha resultado aceitável. A primeira síntese pode levar vários minutos em CPU, porque baixa/carrega o modelo e executa o modelo local. Prévia repetida com os mesmos ajustes fica em cache durante a sessão.
 

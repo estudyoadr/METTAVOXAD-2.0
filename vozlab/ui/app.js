@@ -1,11 +1,11 @@
 const styles = {
-  "Mercado": {pace: 74, expression: 80, pauses: 28},
+  "Varejo": {pace: 74, expression: 80, pauses: 28},
   "Institucional": {pace: 43, expression: 51, pauses: 66},
   "Documentário": {pace: 38, expression: 60, pauses: 72},
   "Rádio/TV": {pace: 67, expression: 73, pauses: 43},
   "Impacto": {pace: 56, expression: 91, pauses: 58}
 };
-let selectedStyle = "Mercado";
+let selectedStyle = "Varejo";
 let selectedStyleId = null;
 let selectedVoiceId = null;
 let voiceProfiles = [];
