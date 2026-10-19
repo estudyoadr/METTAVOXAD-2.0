@@ -1,6 +1,6 @@
 {
   "name": "vozlab-desktop",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": true,
   "description": "Mettavox Clonner — estúdio local de clonagem de voz e locução",
   "main": "electron/main.cjs",
@@ -15,10 +15,30 @@
   "build": {
     "appId": "br.vozlab.desktop",
     "productName": "Mettavox Clonner",
-    "directories": { "output": "dist" },
-    "files": ["electron/**/*", "ui/**/*", "package.json"],
-    "extraResources": [{ "from": "../dist-engine/VozLabEngine", "to": "engine" }],
-    "win": { "target": ["nsis"], "artifactName": "Mettavox-Clonner-Setup-${version}-${arch}.${ext}" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true }
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "ui/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist-engine/VozLabEngine",
+        "to": "engine"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "Mettavox-Clonner-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }

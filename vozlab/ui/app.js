@@ -420,8 +420,8 @@ window.vozlab?.onEngineProgress?.(message => {
     if (generationBusy && !clonePreviewBusy) button.textContent = "Carregando voz…";
     setEngineMessage(message.message || "Carregando modelo na memória…", "O modelo está sendo preparado para gerar a locução.");
   } else if (message.phase === "generating") {
-    if (generationBusy && !clonePreviewBusy) button.textContent = message.current && message.total ? `Gerando ${message.current}/${message.total}…` : "Gerando áudio…";
-    setEngineMessage(message.message || "Gerando a locução…", message.total ? `Frase ${message.current || 0} de ${message.total}.` : "A geração pode levar alguns instantes.");
+    if (generationBusy && !clonePreviewBusy) button.textContent = message.current && message.total ? `Gerando trecho ${message.current}/${message.total}…` : "Gerando áudio…";
+    setEngineMessage(message.message || "Gerando a locução…", message.total ? `Trecho ${message.current || 0} de ${message.total} concluído.` : "A geração pode levar alguns instantes.");
   } else if (message.phase === "ready") {
     if (generationBusy && !clonePreviewBusy) button.textContent = "Finalizando áudio…";
     setEngineMessage(message.message || "Motor de voz pronto.", "Preparando o resultado.");

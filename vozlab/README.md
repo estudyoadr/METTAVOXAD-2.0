@@ -6,7 +6,7 @@ App Windows x64 para clonagem local de voz em português brasileiro, geração d
 
 - O perfil de voz guarda uma gravação de referência autorizada no computador.
 - Estilos salvos ficam vinculados a um perfil. Uma amostra de estilo serve como áudio de referência para reproduzir a interpretação; use uma gravação da mesma pessoa do perfil. Isso é importante porque o motor usa o mesmo áudio para timbre e interpretação.
-- O texto é sintetizado pelo pacote PT-BR do Chatterbox. Ritmo, expressividade e pausa entre frases controlam parâmetros reais da geração.
+- O texto é sintetizado pelo pacote PT-BR do Chatterbox. O app agrupa frases em trechos de até 260 caracteres para reduzir chamadas repetidas ao modelo; ritmo, expressividade e pausa entre trechos controlam a geração.
 - O WAV gerado fica na pasta local do Mettavox Clonner e pode ser ouvido ou exportado pelo app.
 - O modelo é baixado na primeira geração. O checkpoint específico de PT-BR tem aproximadamente 2,14 GB, além dos componentes compartilhados.
 - Sem conexão à internet na primeira configuração, a geração não funciona. Depois de baixar o modelo, a inferência é local.
@@ -22,13 +22,13 @@ As quatro gravações enviadas para o projeto são referências de estilo: anima
 
 Cada perfil representa uma identidade vocal, por exemplo **Clone Mariano** ou **Clone Edna**. Depois de selecionar a identidade, os estilos **Varejo, Impacto, Documentário, Institucional** e **Rádio/TV** definem como ela interpreta o texto; estilos personalizados ficam vinculados ao clone selecionado. Ao criar ou substituir um perfil, o app gera uma frase curta com a gravação escolhida. Você precisa ouvir a prévia antes de habilitar **Salvar perfil**. O perfil atual continua intacto até a nova gravação ser aprovada; depois pode ser renomeado, ter a gravação trocada ou ser excluído. O botão de parar interrompe a reprodução.
 
-A prévia usa o mesmo motor PT-BR da locução final. Ela não é uma promessa de fidelidade: serve para você rejeitar uma gravação de referência que não tenha resultado aceitável. A primeira síntese pode levar vários minutos em CPU, porque baixa/carrega o modelo e executa o modelo local. Prévia repetida com os mesmos ajustes fica em cache durante a sessão.
+A prévia usa o mesmo motor PT-BR da locução final. Ela não é uma promessa de fidelidade: serve para você rejeitar uma gravação de referência que não tenha resultado aceitável. A primeira síntese pode levar vários minutos em CPU: além de baixar/carregar o modelo, o computador precisa executar a inferência local. A GPU só é usada se o PyTorch detectar suporte CUDA compatível. Prévia repetida com os mesmos ajustes fica em cache durante a sessão.
 
 ## Fidelidade e limites
 
-O pacote oficial declara clonagem por áudio de referência e um fine-tune dedicado ao português brasileiro. Isso não garante que a saída vá soar igual ao Mariano. Antes de chamar o produto de pronto, é obrigatório ouvir frases inéditas do usuário e avaliar timbre, sotaque, dicção e variação por estilo. O app não substitui automaticamente a referência por uma voz da biblioteca: sem motor ou referência válidos, informa o erro. O teste automático gera WAV com uma referência sintética e valida o motor; não mede similaridade com a voz do usuário. A validação de timbre, sotaque, dicção e naturalidade precisa ser feita ouvindo a voz real no Windows do usuário.
+O pacote oficial declara clonagem por áudio de referência e um fine-tune dedicado ao português brasileiro. Isso não garante que a saída vá soar igual ao Mariano. Antes de chamar o produto de pronto, é obrigatório ouvir frases inéditas do usuário e avaliar timbre, sotaque, dicção e variação por estilo. O app não substitui automaticamente a referência por uma voz da biblioteca: sem motor ou referência válidos, informa o erro. O teste automático no Windows x64 carrega o checkpoint real e gera um WAV com referência sintética; confirma o funcionamento do pacote, mas não mede a velocidade no computador do usuário nem a similaridade com a voz dele. A validação de timbre, sotaque, dicção e naturalidade precisa ser feita ouvindo a voz real no Windows.
 
-Este repositório ainda é uma compilação de desenvolvimento. A arquitetura do worker e o fluxo da interface foram implementados, mas o worker empacotado e a fidelidade ainda precisam ser validados em Windows x64. Não publique o instalador como versão final até concluir esses testes.
+Este repositório continua em validação de uso. A compilação Windows x64 e o teste automatizado do motor empacotado passaram. Ainda falta validar a velocidade e a fidelidade com gravações reais no computador do usuário.
 
 ## Desenvolvimento
 

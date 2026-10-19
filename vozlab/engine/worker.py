@@ -214,11 +214,48 @@ def engine_api_selftest() -> dict:
     }
 
 
+MAX_TEXT_CHARS_PER_PASS = 260
+
+
 def split_sentences(text: str) -> list[str]:
-    # Keeping the punctuation at the end of each segment lets the model phrase
-    # naturally while the pause control inserts silence between full sentences.
+    # Keep punctuation so the TTS model can phrase speech naturally.
     pieces = re.split(r"(?<=[.!?])\s+", text.strip())
     return [piece.strip() for piece in pieces if piece.strip()]
+
+
+def split_generation_chunks(text: str) -> list[str]:
+    """Group short sentences to avoid paying full model-inference cost per sentence."""
+    chunks: list[str] = []
+    current = ""
+
+    for sentence in split_sentences(text):
+        # Break unusually long single sentences only at word boundaries.
+        parts: list[str] = []
+        if len(sentence) <= MAX_TEXT_CHARS_PER_PASS:
+            parts = [sentence]
+        else:
+            fragment = ""
+            for word in sentence.split():
+                candidate = f"{fragment} {word}".strip()
+                if fragment and len(candidate) > MAX_TEXT_CHARS_PER_PASS:
+                    parts.append(fragment.rstrip(",") + ",")
+                    fragment = word
+                else:
+                    fragment = candidate
+            if fragment:
+                parts.append(fragment)
+
+        for part in parts:
+            candidate = f"{current} {part}".strip()
+            if current and len(candidate) > MAX_TEXT_CHARS_PER_PASS:
+                chunks.append(current)
+                current = part
+            else:
+                current = candidate
+
+    if current:
+        chunks.append(current)
+    return chunks
 
 
 def generate(request: dict) -> dict:
@@ -260,36 +297,37 @@ def generate(request: dict) -> dict:
     exaggeration = 0.25 + expression * 0.55
     # Lower CFG can help preserve natural pacing for fast references.
     cfg_weight = 0.25 + (1.0 - pace) * 0.45
+    # Preserve the pause control between chunks; punctuation handles pauses within each chunk.
     sentence_gap = 0.08 + pauses * 0.72
-    sentences = split_sentences(text)
+    chunks = split_generation_chunks(text)
 
-    emit({"event": "progress", "phase": "generating", "message": "Gerando a locução…", "total": len(sentences)})
+    emit({"event": "progress", "phase": "generating", "message": f"Gerando a locução em {len(chunks)} trechos…", "total": len(chunks)})
     audio_parts = []
-    for index, sentence in enumerate(sentences, start=1):
+    for index, chunk in enumerate(chunks, start=1):
         # Pass a built-in Unicode str even if a future splitter returns a string subclass.
-        sentence = unicodedata.normalize("NFC", str(sentence)).replace(chr(0), "")
+        chunk = unicodedata.normalize("NFC", str(chunk)).replace(chr(0), "")
         try:
             wav = model.generate(
-                sentence,
+                chunk,
                 language_id="pt",
-                audio_prompt_path=str(reference_cache),  # Keep every sentence conditioned on the selected voice.
+                audio_prompt_path=str(reference_cache),  # Keep every generated chunk conditioned on the selected voice.
                 exaggeration=exaggeration,
                 cfg_weight=cfg_weight,
             )
         except TypeError as exc:
             if "TextInputSequence must be str" in str(exc):
-                excerpt = sentence[:80].replace("\\n", " ")
+                excerpt = chunk[:80].replace("\\n", " ")
                 raise TypeError(
-                    f"O tokenizador rejeitou a frase {index}/{len(sentences)} "
-                    f"(tipo={type(sentence).__name__}, caracteres={len(sentence)}, início={excerpt!r})."
+                    f"O tokenizador rejeitou o trecho {index}/{len(chunks)} "
+                    f"(tipo={type(chunk).__name__}, caracteres={len(chunk)}, início={excerpt!r})."
                 ) from exc
             raise
         values = wav.squeeze().detach().cpu().numpy().astype(np.float32, copy=False)
         if values.size:
             audio_parts.append(values)
-        if index < len(sentences):
+        if index < len(chunks):
             audio_parts.append(np.zeros(round(model.sr * sentence_gap), dtype=np.float32))
-        emit({"event": "progress", "phase": "generating", "message": f"Frase {index} de {len(sentences)}…", "current": index, "total": len(sentences)})
+        emit({"event": "progress", "phase": "generating", "message": f"Trecho {index} de {len(chunks)} pronto…", "current": index, "total": len(chunks)})
 
     if not audio_parts:
         raise RuntimeError("O motor não gerou áudio para este texto.")
