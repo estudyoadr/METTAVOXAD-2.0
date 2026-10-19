@@ -11,6 +11,10 @@ import tempfile
 import wave
 from pathlib import Path
 
+for stream in (sys.stdout, sys.stderr):
+    if hasattr(stream, "reconfigure"):
+        stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
 
 def write_reference(path: Path) -> None:
     """Write a deterministic 4-second speech-like fixture without user audio."""
@@ -120,5 +124,5 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as error:
-        print(str(error), file=sys.stderr)
+        print(ascii(error), file=sys.stderr)
         raise SystemExit(1)
