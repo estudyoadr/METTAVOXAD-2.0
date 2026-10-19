@@ -1,0 +1,197 @@
+"""Persistent local VOZLAB worker for Brazilian Portuguese voice cloning.
+
+The worker speaks JSON Lines over stdin/stdout so Electron can keep the model
+loaded between generations. Diagnostics go to stderr; stdout is protocol only.
+"""
+from __future__ import annotations
+
+import json
+import hashlib
+import os
+import re
+import shutil
+import sys
+import traceback
+import uuid
+from pathlib import Path
+
+
+BASE_REPO = "ResembleAI/chatterbox"
+PTBR_REPO = "ResembleAI/Chatterbox-Multilingual-pt-br"
+PTBR_CHECKPOINT = "t3_pt_br.safetensors"
+PTBR_DECODER = "s3gen_v3.pt"
+MODEL_FILES = ("ve.pt", "grapheme_mtl_merged_expanded_v1.json")
+model = None
+model_device = "cpu"
+
+
+def emit(payload: dict) -> None:
+    sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    sys.stdout.flush()
+
+
+def data_dir() -> Path:
+    root = os.environ.get("VOZLAB_DATA_DIR")
+    if root:
+        return Path(root)
+    return Path.home() / "AppData" / "Roaming" / "VOZLAB"
+
+
+def model_dir() -> Path:
+    return data_dir() / "models" / "chatterbox-ptbr"
+
+
+def installed_status() -> dict:
+    try:
+        import torch
+        from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # noqa: F401
+
+        folder = model_dir()
+        required = (*MODEL_FILES, PTBR_CHECKPOINT, "s3gen.pt")
+        ready = all((folder / file).is_file() for file in required)
+        device = "CUDA" if torch.cuda.is_available() else "CPU"
+        return {"engineInstalled": True, "modelReady": ready, "device": device}
+    except Exception as exc:
+        return {"engineInstalled": False, "modelReady": False, "device": None, "error": str(exc)}
+
+
+def load_model() -> None:
+    global model, model_device
+    if model is not None:
+        return
+
+    import torch
+    from huggingface_hub import hf_hub_download, snapshot_download
+    from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+
+    folder = model_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    emit({"event": "progress", "phase": "assets", "message": "Baixando os componentes do motor PT-BR…"})
+
+    # Keep the model in the user's private app-data folder, outside the install.
+    snapshot_download(
+        repo_id=BASE_REPO,
+        allow_patterns=list(MODEL_FILES),
+        local_dir=str(folder),
+    )
+    for filename, target_name in ((PTBR_CHECKPOINT, PTBR_CHECKPOINT), (PTBR_DECODER, "s3gen.pt")):
+        asset = hf_hub_download(
+            repo_id=PTBR_REPO,
+            filename=filename,
+            local_dir=str(folder),
+        )
+        target = folder / target_name
+        if Path(asset).resolve() != target.resolve():
+            shutil.copyfile(asset, target)
+
+    model_device = "cuda" if torch.cuda.is_available() else "cpu"
+    emit({"event": "progress", "phase": "loading", "message": f"Carregando modelo na memória ({model_device.upper()})…"})
+    model = ChatterboxMultilingualTTS.from_local(
+        str(folder), device=model_device, t3_model=PTBR_CHECKPOINT
+    )
+    emit({"event": "progress", "phase": "ready", "message": "Motor de voz pronto."})
+
+
+def split_sentences(text: str) -> list[str]:
+    # Keeping the punctuation at the end of each segment lets the model phrase
+    # naturally while the pause control inserts silence between full sentences.
+    pieces = re.split(r"(?<=[.!?])\s+", text.strip())
+    return [piece.strip() for piece in pieces if piece.strip()]
+
+
+def generate(request: dict) -> dict:
+    import librosa
+    import numpy as np
+    import soundfile as sf
+    import torch
+
+    voice_path = Path(request.get("voicePath", ""))
+    text = str(request.get("text", "")).strip()
+    if not voice_path.is_file():
+        raise ValueError("A gravação de referência desta voz não foi encontrada.")
+    if not text:
+        raise ValueError("Digite o texto da locução.")
+    if len(text) > 5000:
+        raise ValueError("O texto ultrapassa o limite de 5.000 caracteres.")
+
+    load_model()
+    assert model is not None
+
+    # Long demo tracks can contain intros, music, and silence. A local 20 s
+    # reference is sufficient for the prompt path and avoids loading minutes
+    # of audio into the speaker encoder on every generation.
+    reference_cache = data_dir() / "prepared" / (hashlib.sha256(f"{voice_path.resolve()}:{voice_path.stat().st_size}:{voice_path.stat().st_mtime_ns}".encode()).hexdigest()[:20] + ".wav")
+    if not reference_cache.is_file():
+        reference_cache.parent.mkdir(parents=True, exist_ok=True)
+        reference_audio, reference_sr = librosa.load(str(voice_path), sr=model.sr, mono=True, duration=20)
+        if reference_audio.size < model.sr * 2:
+            raise ValueError("A referência precisa ter pelo menos 2 segundos de fala audível.")
+        sf.write(str(reference_cache), reference_audio, reference_sr, subtype="PCM_16")
+
+    expression = min(1.0, max(0.0, float(request.get("expression", 55)) / 100.0))
+    pace = min(1.0, max(0.0, float(request.get("pace", 50)) / 100.0))
+    pauses = min(1.0, max(0.0, float(request.get("pauses", 45)) / 100.0))
+    exaggeration = 0.25 + expression * 0.55
+    # Lower CFG can help preserve natural pacing for fast references.
+    cfg_weight = 0.25 + (1.0 - pace) * 0.45
+    sentence_gap = 0.08 + pauses * 0.72
+    sentences = split_sentences(text)
+
+    emit({"event": "progress", "phase": "generating", "message": "Gerando a locução…", "total": len(sentences)})
+    audio_parts = []
+    for index, sentence in enumerate(sentences, start=1):
+        wav = model.generate(
+            sentence,
+            language_id="pt",
+            audio_prompt_path=str(reference_cache) if index == 1 else None,
+            exaggeration=exaggeration,
+            cfg_weight=cfg_weight,
+        )
+        values = wav.squeeze().detach().cpu().numpy().astype(np.float32, copy=False)
+        if values.size:
+            audio_parts.append(values)
+        if index < len(sentences):
+            audio_parts.append(np.zeros(round(model.sr * sentence_gap), dtype=np.float32))
+        emit({"event": "progress", "phase": "generating", "message": f"Frase {index} de {len(sentences)}…", "current": index, "total": len(sentences)})
+
+    if not audio_parts:
+        raise RuntimeError("O motor não gerou áudio para este texto.")
+    audio = np.concatenate(audio_parts)
+
+    # Small tempo adjustments use pitch-preserving time stretch. At neutral
+    # settings the waveform is left untouched.
+    stretch_rate = 1.0 + (pace - 0.5) * 0.28
+    if abs(stretch_rate - 1.0) > 0.015:
+        import librosa
+        audio = librosa.effects.time_stretch(audio, rate=stretch_rate).astype(np.float32, copy=False)
+
+    output_dir = data_dir() / "generated"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"VOZLAB-{uuid.uuid4().hex[:10]}.wav"
+    sf.write(str(output_path), audio, model.sr, subtype="PCM_16")
+    return {"ok": True, "path": str(output_path), "sampleRate": int(model.sr), "device": model_device}
+
+
+def main() -> None:
+    for line in sys.stdin:
+        try:
+            request = json.loads(line)
+            request_id = request.get("id")
+            command = request.get("command")
+            if command == "status":
+                result = installed_status()
+            elif command == "generate":
+                result = generate(request)
+            elif command == "shutdown":
+                emit({"id": request_id, "ok": True})
+                break
+            else:
+                raise ValueError("Comando desconhecido para o motor de voz.")
+            emit({"id": request_id, **result})
+        except Exception as exc:
+            emit({"id": request.get("id") if "request" in locals() else None, "ok": False, "error": str(exc)})
+            traceback.print_exc(file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
