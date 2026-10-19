@@ -2,11 +2,6 @@ name: VOZLAB Windows x64
 
 on:
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: "Etiqueta opcional para publicar o instalador como versão do GitHub"
-        required: false
-        type: string
   push:
     branches: ["voice-cloning-app"]
     paths:
@@ -14,7 +9,7 @@ on:
       - ".github/workflows/vozlab-windows.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-windows:
@@ -68,9 +63,3 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publicar instalador em uma versão do GitHub
-        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: gh release create "${{ inputs.release_tag }}" vozlab/dist/*.exe --title "VOZLAB ${{ inputs.release_tag }}" --notes "Instalador Windows x64 do VOZLAB."
