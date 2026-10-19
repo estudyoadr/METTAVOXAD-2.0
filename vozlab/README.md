@@ -18,9 +18,15 @@ Use uma gravação sua ou de outra pessoa com autorização explícita. Para for
 
 As quatro gravações enviadas para o projeto são referências de estilo: animada/meio impacto, padrão médio, médio-grave e clássica. Elas não são copiadas para o código nem para o instalador. No app, use **Novo estilo** para associar cada arquivo ao perfil correto. As gravações, modelos e locuções ficam em `userData/VozLab`.
 
+## Perfis e prévia antes de salvar
+
+Ao criar ou substituir um perfil, o app gera uma frase curta com a gravação escolhida. Você precisa ouvir a prévia antes de habilitar **Salvar perfil**. O perfil atual continua intacto até a nova gravação ser aprovada; depois pode ser renomeado, ter a gravação trocada ou ser excluído. O botão de parar interrompe a reprodução.
+
+A prévia usa o mesmo motor PT-BR da locução final. Ela não é uma promessa de fidelidade: serve para você rejeitar uma gravação de referência que não tenha resultado aceitável. A primeira síntese pode levar vários minutos em CPU, porque baixa/carrega o modelo e executa o modelo local. Prévia repetida com os mesmos ajustes fica em cache durante a sessão.
+
 ## Fidelidade e limites
 
-O pacote oficial declara clonagem por áudio de referência e um fine-tune dedicado ao português brasileiro. Isso não garante que a saída vá soar igual ao Mariano. Antes de chamar o produto de pronto, é obrigatório ouvir frases inéditas do usuário e avaliar timbre, sotaque, dicção e variação por estilo. O app não substitui automaticamente a referência por uma voz da biblioteca: sem motor ou referência válidos, informa o erro.
+O pacote oficial declara clonagem por áudio de referência e um fine-tune dedicado ao português brasileiro. Isso não garante que a saída vá soar igual ao Mariano. Antes de chamar o produto de pronto, é obrigatório ouvir frases inéditas do usuário e avaliar timbre, sotaque, dicção e variação por estilo. O app não substitui automaticamente a referência por uma voz da biblioteca: sem motor ou referência válidos, informa o erro. O teste automático gera WAV com uma referência sintética e valida o motor; não mede similaridade com a voz do usuário. A validação de timbre, sotaque, dicção e naturalidade precisa ser feita ouvindo a voz real no Windows do usuário.
 
 Este repositório ainda é uma compilação de desenvolvimento. A arquitetura do worker e o fluxo da interface foram implementados, mas o worker empacotado e a fidelidade ainda precisam ser validados em Windows x64. Não publique o instalador como versão final até concluir esses testes.
 

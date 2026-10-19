@@ -48,7 +48,12 @@
                 <span class="add-orb">＋</span><span class="voice-copy"><strong>Adicionar voz</strong><small>Com autorização</small></span>
               </button>
             </div>
-            <div class="voice-foot"><span class="mini-wave">▂ ▄ ▆ ▃ ▇ ▄ ▂ ▅ ▃ ▆ ▂</span><span>Referência vocal selecionada</span><button id="previewVoice" class="tiny-link" type="button" disabled>▶ Ouvir voz</button><button id="manageVoice" class="tiny-link" type="button">Ver gravações</button></div>
+            <div class="profile-management">
+              <button id="editVoice" class="text-button" type="button" disabled>✎ Renomear perfil</button>
+              <button id="replaceVoice" class="text-button" type="button" disabled>↻ Alterar gravação</button>
+              <button id="deleteVoice" class="text-button danger-link" type="button" disabled>× Excluir perfil</button>
+            </div>
+            <div class="voice-foot"><span class="mini-wave">▂ ▄ ▆ ▃ ▇ ▄ ▂ ▅ ▃ ▆ ▂</span><span>Referência vocal selecionada</span><button id="previewVoice" class="tiny-link" type="button" disabled>▶ Testar clone</button><button id="manageVoice" class="tiny-link" type="button">Ver gravações</button></div>
           </section>
 
           <section class="card style-card">
@@ -89,7 +94,7 @@
         <aside class="side-column">
           <section class="card waveform-card">
             <div class="section-heading"><div><div class="eyebrow">MONITOR DE ÁUDIO</div><h2>Prévia</h2></div><span class="ready-tag" id="previewState"><i></i> AGUARDANDO</span></div>
-            <div class="wave-stage"><div class="wave-glow"></div><div class="waveform" aria-hidden="true"></div><button class="play-orb" id="playPreview" type="button" aria-label="Reproduzir prévia" disabled>▶</button><span class="timecode" id="timecode">00:00 <i></i> 00:00</span></div>
+            <div class="wave-stage"><div class="wave-glow"></div><div class="waveform" aria-hidden="true"></div><button class="play-orb" id="playPreview" type="button" aria-label="Reproduzir prévia" disabled>▶</button><button class="stop-orb" id="stopPreview" type="button" aria-label="Parar áudio" disabled>■</button><span class="timecode" id="timecode">00:00 <i></i> 00:00</span></div>
             <audio id="previewAudio" hidden></audio>
             <div class="preview-caption"><span class="preview-icon">♫</span><span><strong id="previewTitle">Nenhuma locução gerada</strong><small id="previewDetail">Seu áudio aparecerá aqui para ouvir e baixar.</small></span></div>
             <button class="export-button" id="exportAudio" disabled>↓ &nbsp; Exportar WAV</button>
@@ -117,7 +122,34 @@
       <label class="dialog-label" for="voiceName">Nome do perfil</label>
       <input id="voiceName" name="voiceName" type="text" maxlength="50" placeholder="Ex.: Minha voz — institucional" autocomplete="off" required />
       <label class="consent-row"><input id="voiceConsent" type="checkbox" /><span>Confirmo que sou a pessoa gravada ou tenho autorização para clonar esta voz.</span></label>
-      <div class="dialog-actions"><button id="cancelVoice" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Continuar para escolher áudio</button></div>
+      <div class="dialog-actions"><button id="cancelVoice" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Escolher gravação</button></div>
+    </form>
+  </dialog>
+  <dialog id="draftDialog" class="style-dialog draft-dialog">
+    <div class="eyebrow">PRÉVIA ANTES DE SALVAR</div>
+    <h2 id="draftTitle">Teste o clone</h2>
+    <p id="draftDescription">O perfil só será salvo depois que você ouvir a frase sintetizada. A primeira geração baixa e carrega o motor no computador.</p>
+    <div class="draft-status" id="draftStatus">Aguardando prévia da voz.</div>
+    <audio id="draftAudio" hidden></audio>
+    <div class="draft-actions">
+      <button id="draftGenerate" type="button" class="outline-button">✦ Gerar prévia</button>
+      <button id="draftListen" type="button" class="outline-button" disabled>▶ Ouvir prévia</button>
+      <button id="draftStop" type="button" class="outline-button" disabled>■ Parar</button>
+    </div>
+    <div class="dialog-actions">
+      <button id="cancelDraft" type="button" class="outline-button">Cancelar</button>
+      <button id="changeDraftAudio" type="button" class="outline-button">Trocar gravação</button>
+      <button id="saveDraftVoice" type="button" class="generate-button" disabled>Salvar perfil</button>
+    </div>
+  </dialog>
+  <dialog id="editVoiceDialog" class="style-dialog">
+    <form id="editVoiceForm" method="dialog">
+      <div class="eyebrow">EDITAR PERFIL DE VOZ</div>
+      <h2>Renomeie este perfil</h2>
+      <p>A gravação de referência permanece salva.</p>
+      <label class="dialog-label" for="editVoiceName">Nome do perfil</label>
+      <input id="editVoiceName" name="editVoiceName" type="text" maxlength="50" autocomplete="off" required />
+      <div class="dialog-actions"><button id="cancelEditVoice" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Salvar nome</button></div>
     </form>
   </dialog>
   <audio id="referenceAudio" hidden></audio>

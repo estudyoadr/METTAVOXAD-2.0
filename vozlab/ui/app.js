@@ -14,6 +14,9 @@ let toastTimer;
 let engineStatus = {engineInstalled: false, modelReady: false};
 let currentAudioPath = null;
 let activeAuditionButton = null;
+let activeDraft = null;
+let draftPreviewHeard = false;
+let clonePreviewBusy = false;
 const toast = document.querySelector("#toast");
 function notify(message) {
   toast.textContent = message;
@@ -56,7 +59,7 @@ script.addEventListener("input", () => {
   document.querySelector("#counter").textContent = `${script.value.length} caracteres`;
 });
 function addVoice() {
-  if (!window.vozlab?.addVoice) return notify("O cadastro de voz será habilitado no app Windows.");
+  if (!window.vozlab?.prepareVoice) return notify("O cadastro de voz não está disponível nesta compilação.");
   document.querySelector("#voiceName").value = "";
   document.querySelector("#voiceConsent").checked = false;
   const dialog = document.querySelector("#voiceDialog");
@@ -66,6 +69,60 @@ function addVoice() {
 }
 document.querySelectorAll("#addVoice,#addVoiceTile,#openProfiles").forEach(button => button.addEventListener("click", addVoice));
 document.querySelector("#cancelVoice").addEventListener("click", () => document.querySelector("#voiceDialog").close());
+async function beginDraftReview(prepared, name, profileId = null) {
+  activeDraft = {draftId: prepared.draftId, name, profileId};
+  draftPreviewHeard = false;
+  document.querySelector("#draftTitle").textContent = profileId ? "Teste a gravação substituta" : "Teste o clone antes de salvar";
+  document.querySelector("#draftDescription").textContent = "Perfil: " + name + ". Ouça a frase sintetizada. Só depois de ouvir você poderá salvar este perfil.";
+  document.querySelector("#draftStatus").textContent = "Gerando uma frase de teste com esta gravação…";
+  document.querySelector("#draftListen").disabled = true;
+  document.querySelector("#draftStop").disabled = true;
+  document.querySelector("#saveDraftVoice").disabled = true;
+  document.querySelector("#draftAudio").removeAttribute("src");
+  if (!document.querySelector("#draftDialog").open) document.querySelector("#draftDialog").showModal();
+  await generateDraftPreview();
+}
+async function generateDraftPreview() {
+  if (!activeDraft || generationBusy) return;
+  const button = document.querySelector("#draftGenerate");
+  generationBusy = true;
+  clonePreviewBusy = true;
+  draftPreviewHeard = false;
+  document.querySelector("#saveDraftVoice").disabled = true;
+  button.disabled = true;
+  button.textContent = "Gerando prévia…";
+  document.querySelector("#draftStatus").textContent = "Preparando motor e sintetizando a frase de teste. A primeira execução baixa os arquivos do modelo.";
+  try {
+    const result = await window.vozlab.previewDraft({
+      draftId: activeDraft.draftId,
+      pace: +document.querySelector("#pace").value,
+      expression: +document.querySelector("#expression").value,
+      pauses: +document.querySelector("#pauses").value
+    });
+    if (!result?.ok) throw new Error(result?.error || "Não foi possível gerar a prévia.");
+    const player = document.querySelector("#draftAudio");
+    player.src = result.url;
+    player.load();
+    document.querySelector("#draftListen").disabled = false;
+    document.querySelector("#draftStatus").textContent = result.cached ? "Prévia pronta (em cache). Ouça para decidir se quer salvar." : "Prévia pronta. Ouça para decidir se quer salvar.";
+    document.querySelector("#draftGenerate").textContent = "↻ Gerar outra prévia";
+  } catch (error) {
+    document.querySelector("#draftStatus").textContent = "Falha ao gerar a prévia: " + (error.message || "erro desconhecido");
+    notify(error.message || "Falha ao gerar a prévia.");
+  } finally {
+    generationBusy = false;
+    clonePreviewBusy = false;
+    button.disabled = false;
+    button.textContent = document.querySelector("#draftAudio").src ? "↻ Gerar outra prévia" : "✦ Gerar prévia";
+    document.querySelector("#cancelDraft").disabled = false;
+    document.querySelector("#changeDraftAudio").disabled = false;
+    updateGenerateButton();
+  }
+}
+async function discardActiveDraft() {
+  if (activeDraft) await window.vozlab.discardVoiceDraft(activeDraft.draftId);
+  activeDraft = null;
+}
 document.querySelector("#voiceForm").addEventListener("submit", async event => {
   event.preventDefault();
   const name = document.querySelector("#voiceName").value.trim();
@@ -73,25 +130,128 @@ document.querySelector("#voiceForm").addEventListener("submit", async event => {
   if (!document.querySelector("#voiceConsent").checked) return notify("Confirme que tem autorização para usar esta voz.");
   document.querySelector("#voiceDialog").close();
   try {
-    const result = await window.vozlab.addVoice(name);
-    if (result?.ok) {
-      selectedVoiceId = result.id;
-      await renderVoices();
-      notify(`Perfil “${result.name}” salvo neste computador.`);
-    } else if (result?.error) notify(result.error);
+    const prepared = await window.vozlab.prepareVoice();
+    if (prepared?.canceled) return;
+    if (!prepared?.ok) throw new Error(prepared?.error || "Não foi possível abrir a gravação.");
+    await beginDraftReview(prepared, name);
   } catch (error) {
-    notify(error.message || "Não foi possível cadastrar a voz.");
+    notify(error.message || "Não foi possível preparar o perfil.");
   }
 });
+document.querySelector("#draftGenerate").addEventListener("click", generateDraftPreview);
+document.querySelector("#draftListen").addEventListener("click", async () => {
+  const player = document.querySelector("#draftAudio");
+  try { player.currentTime = 0; await player.play(); }
+  catch (error) { notify("Não foi possível reproduzir a prévia."); }
+});
+document.querySelector("#draftAudio").addEventListener("play", () => {
+  draftPreviewHeard = true;
+  document.querySelector("#draftStop").disabled = false;
+  document.querySelector("#saveDraftVoice").disabled = false;
+});
+document.querySelector("#draftAudio").addEventListener("ended", () => {
+  document.querySelector("#draftStop").disabled = true;
+  document.querySelector("#draftListen").textContent = "▶ Ouvir novamente";
+});
+document.querySelector("#draftStop").addEventListener("click", () => {
+  const player = document.querySelector("#draftAudio");
+  player.pause();
+  try { player.currentTime = 0; } catch {}
+  document.querySelector("#draftStop").disabled = true;
+  document.querySelector("#draftListen").textContent = "▶ Ouvir prévia";
+});
+document.querySelector("#saveDraftVoice").addEventListener("click", async () => {
+  if (!activeDraft || !draftPreviewHeard || generationBusy) return notify("Gere e ouça a prévia antes de salvar o perfil.");
+  const request = {...activeDraft};
+  const result = await window.vozlab.commitVoiceDraft({draftId: request.draftId, name: request.name, profileId: request.profileId, heardPreview: draftPreviewHeard});
+  if (!result?.ok) return notify(result?.error || "Não foi possível salvar o perfil.");
+  document.querySelector("#draftAudio").pause();
+  document.querySelector("#draftDialog").close();
+  activeDraft = null;
+  selectedVoiceId = result.id;
+  selectedStyleId = null;
+  await renderVoices();
+  await renderSavedCount();
+  notify(result.replaced ? "Gravação do perfil “" + result.name + "” atualizada." : "Perfil “" + result.name + "” salvo.");
+});
+document.querySelector("#cancelDraft").addEventListener("click", async () => {
+  if (generationBusy) return notify("Aguarde a geração da prévia terminar para cancelar.");
+  await discardActiveDraft();
+  document.querySelector("#draftAudio").pause();
+  document.querySelector("#draftDialog").close();
+});
+document.querySelector("#changeDraftAudio").addEventListener("click", async () => {
+  if (generationBusy || !activeDraft) return notify("Aguarde a geração da prévia terminar.");
+  const previous = activeDraft;
+  const prepared = await window.vozlab.prepareVoice();
+  if (prepared?.canceled) return;
+  if (!prepared?.ok) return notify(prepared?.error || "Não foi possível abrir outra gravação.");
+  await window.vozlab.discardVoiceDraft(previous.draftId);
+  await beginDraftReview(prepared, previous.name, previous.profileId);
+});
+document.querySelector("#draftDialog").addEventListener("cancel", async event => {
+  event.preventDefault();
+  if (generationBusy) return notify("Aguarde a geração da prévia terminar para cancelar.");
+  await discardActiveDraft();
+});
+let editingVoiceId = null;
+document.querySelector("#editVoice").addEventListener("click", () => {
+  const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
+  if (!profile) return notify("Selecione um perfil para renomear.");
+  editingVoiceId = profile.id;
+  const input = document.querySelector("#editVoiceName");
+  input.value = profile.name;
+  document.querySelector("#editVoiceDialog").showModal();
+  setTimeout(() => { input.focus(); input.select(); }, 0);
+});
+document.querySelector("#cancelEditVoice").addEventListener("click", () => document.querySelector("#editVoiceDialog").close());
+document.querySelector("#editVoiceForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const name = document.querySelector("#editVoiceName").value.trim();
+  if (!editingVoiceId || !name) return notify("Digite um nome para o perfil.");
+  const result = await window.vozlab.renameVoice(editingVoiceId, name);
+  if (!result?.ok) return notify(result?.error || "Não foi possível renomear o perfil.");
+  document.querySelector("#editVoiceDialog").close();
+  editingVoiceId = null;
+  await renderVoices();
+  notify("Perfil renomeado para “" + result.name + "”.");
+});
+document.querySelector("#replaceVoice").addEventListener("click", async () => {
+  const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
+  if (!profile) return notify("Selecione um perfil para alterar a gravação.");
+  try {
+    const prepared = await window.vozlab.prepareVoice();
+    if (prepared?.canceled) return;
+    if (!prepared?.ok) throw new Error(prepared?.error || "Não foi possível escolher outra gravação.");
+    await beginDraftReview(prepared, profile.name, profile.id);
+  } catch (error) { notify(error.message || "Não foi possível alterar a gravação."); }
+});
+document.querySelector("#deleteVoice").addEventListener("click", async () => {
+  const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
+  if (!profile) return notify("Selecione um perfil para excluir.");
+  if (!window.confirm("Excluir o perfil “" + profile.name + "” e seus arquivos locais? Esta ação não pode ser desfeita.")) return;
+  const result = await window.vozlab.deleteVoice(profile.id);
+  if (!result?.ok) return notify(result?.error || "Não foi possível excluir o perfil.");
+  stopReferenceAudio();
+  selectedVoiceId = null;
+  selectedStyleId = null;
+  await renderVoices();
+  await renderSavedCount();
+  notify("Perfil “" + profile.name + "” excluído.");
+});
+
 async function renderVoices() {
   const profiles = await window.vozlab?.getProfiles?.();
   if (!profiles) return;
   voiceProfiles = profiles;
   const picker = document.querySelector("#voicePicker");
-  picker.querySelectorAll(".saved-voice-option").forEach(item => item.remove());
+  picker.querySelectorAll(".saved-voice-row").forEach(item => item.remove());
   const placeholder = picker.querySelector(".placeholder-voice");
   placeholder.hidden = profiles.length > 0;
   if (profiles.length && !profiles.some(profile => profile.id === selectedVoiceId)) selectedVoiceId = profiles[0].id;
+  document.querySelector("#editVoice").disabled = !profiles.some(profile => profile.id === selectedVoiceId);
+  document.querySelector("#replaceVoice").disabled = !profiles.some(profile => profile.id === selectedVoiceId);
+  document.querySelector("#deleteVoice").disabled = !profiles.some(profile => profile.id === selectedVoiceId);
   profiles.forEach(profile => {
     const row = document.createElement("div");
     row.className = "saved-voice-row";
@@ -113,6 +273,9 @@ async function renderVoices() {
     button.append(orb, copy, check);
     button.addEventListener("click", () => {
       stopReferenceAudio();
+      const previewPlayer = document.querySelector("#previewAudio");
+      previewPlayer.pause();
+      try { previewPlayer.currentTime = 0; } catch {}
       selectedVoiceId = profile.id;
       selectedStyleId = null;
       picker.querySelectorAll(".voice-option").forEach(item => item.classList.remove("selected"));
@@ -209,8 +372,12 @@ function updateGenerateButton() {
   if (!button) return;
   const hasText = Boolean(document.querySelector("#script").value.trim());
   button.disabled = generationBusy || !engineStatus.engineInstalled || !selectedVoiceId || !hasText;
+  const hasSelectedProfile = voiceProfiles.some(profile => profile.id === selectedVoiceId);
   const previewButton = document.querySelector("#previewVoice");
-  if (previewButton) previewButton.disabled = !voiceProfiles.some(profile => profile.id === selectedVoiceId);
+  if (previewButton) previewButton.disabled = generationBusy || !hasSelectedProfile;
+  document.querySelector("#editVoice").disabled = !hasSelectedProfile || generationBusy;
+  document.querySelector("#replaceVoice").disabled = !hasSelectedProfile || generationBusy;
+  document.querySelector("#deleteVoice").disabled = !hasSelectedProfile || generationBusy;
   button.title = !engineStatus.engineInstalled ? "Motor local indisponível nesta compilação" : !selectedVoiceId ? "Cadastre uma referência de voz" : !hasText ? "Digite o texto da locução" : "Gerar com o perfil selecionado";
 }
 
@@ -237,17 +404,26 @@ async function checkEngine() {
 
 window.vozlab?.onEngineProgress?.(message => {
   const button = document.querySelector("#generate");
+  if (clonePreviewBusy) {
+    const status = document.querySelector("#draftDialog").open ? document.querySelector("#draftStatus") : document.querySelector("#engineDetail");
+    status.textContent = message.message || "Preparando a prévia da voz…";
+    if (document.querySelector("#draftDialog").open) {
+      document.querySelector("#draftGenerate").disabled = true;
+      document.querySelector("#cancelDraft").disabled = true;
+      document.querySelector("#changeDraftAudio").disabled = true;
+    }
+  }
   if (message.phase === "assets") {
-    if (generationBusy) button.textContent = "Baixando modelo…";
+    if (generationBusy && !clonePreviewBusy) button.textContent = "Baixando modelo…";
     setEngineMessage(message.message || "Baixando componentes do modelo…", "Primeiro uso: download local dos arquivos PT-BR. Esta etapa pode levar alguns minutos.", true);
   } else if (message.phase === "loading") {
-    if (generationBusy) button.textContent = "Carregando voz…";
+    if (generationBusy && !clonePreviewBusy) button.textContent = "Carregando voz…";
     setEngineMessage(message.message || "Carregando modelo na memória…", "O modelo está sendo preparado para gerar a locução.");
   } else if (message.phase === "generating") {
-    if (generationBusy) button.textContent = message.current && message.total ? `Gerando ${message.current}/${message.total}…` : "Gerando áudio…";
+    if (generationBusy && !clonePreviewBusy) button.textContent = message.current && message.total ? `Gerando ${message.current}/${message.total}…` : "Gerando áudio…";
     setEngineMessage(message.message || "Gerando a locução…", message.total ? `Frase ${message.current || 0} de ${message.total}.` : "A geração pode levar alguns instantes.");
   } else if (message.phase === "ready") {
-    if (generationBusy) button.textContent = "Finalizando áudio…";
+    if (generationBusy && !clonePreviewBusy) button.textContent = "Finalizando áudio…";
     setEngineMessage(message.message || "Motor de voz pronto.", "Preparando o resultado.");
   } else {
     setEngineMessage(message.message || "Preparando o motor…", "Aguarde; a primeira inicialização pode levar alguns minutos.");
@@ -280,6 +456,7 @@ document.querySelector("#generate").addEventListener("click", async () => {
     document.querySelector("#previewDetail").textContent = `WAV · ${result.device || "CPU"} · ${result.referenceStyle ? `amostra “${result.referenceStyle}”` : "perfil de voz"}`;
     document.querySelector("#previewState").innerHTML = "<i></i> PRONTA";
     document.querySelector("#playPreview").disabled = false;
+    document.querySelector("#stopPreview").disabled = false;
     document.querySelector("#exportAudio").disabled = false;
     setEngineMessage(`Motor pronto · ${result.device || "CPU"}`, "O áudio foi salvo localmente.", true);
     engineStatus = {...engineStatus, engineInstalled: true, modelReady: true};
@@ -326,17 +503,53 @@ async function playReferenceAudio(profile, button) {
   }
 }
 document.querySelector("#referenceAudio").addEventListener("ended", stopReferenceAudio);
-document.querySelector("#previewVoice").addEventListener("click", async event => {
-  const button = event.currentTarget;
-  if (activeAuditionButton === button) {
-    stopReferenceAudio();
-    return;
-  }
+document.querySelector("#previewVoice").addEventListener("click", async () => {
   const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
-  if (!profile) return notify("Selecione uma voz salva para ouvir a gravação de referência.");
-  await playReferenceAudio(profile, button);
+  if (!profile) return notify("Selecione um perfil para testar a voz clonada.");
+  if (generationBusy) return notify("Aguarde o processamento atual terminar.");
+  stopReferenceAudio();
+  generationBusy = true;
+  clonePreviewBusy = true;
+  updateGenerateButton();
+  document.querySelector("#previewState").innerHTML = "<i></i> TESTE";
+  document.querySelector("#previewTitle").textContent = "Teste da voz clonada";
+  document.querySelector("#previewDetail").textContent = "Gerando uma frase curta com o perfil selecionado.";
+  setEngineMessage("Preparando teste da voz…", "Na primeira execução, o motor baixa e carrega o modelo PT-BR.");
+  try {
+    const result = await window.vozlab.previewClone({
+      voiceId: profile.id, styleId: selectedStyleId,
+      pace: +document.querySelector("#pace").value,
+      expression: +document.querySelector("#expression").value,
+      pauses: +document.querySelector("#pauses").value
+    });
+    if (!result?.ok) throw new Error(result?.error || "Não foi possível gerar a prévia.");
+    currentAudioPath = result.path;
+    const player = document.querySelector("#previewAudio");
+    player.src = result.url;
+    player.load();
+    document.querySelector("#previewDetail").textContent = "Frase sintetizada · " + (result.device || "CPU") + (result.referenceStyle ? " · amostra “" + result.referenceStyle + "”" : " · perfil de voz");
+    document.querySelector("#previewState").innerHTML = "<i></i> PRÉVIA";
+    document.querySelector("#playPreview").disabled = false;
+    document.querySelector("#stopPreview").disabled = false;
+    document.querySelector("#exportAudio").disabled = true;
+    await player.play();
+    setEngineMessage("Prévia clonada pronta", "Ouça o resultado antes de escrever ou gerar a locução.", true);
+  } catch (error) {
+    document.querySelector("#previewState").innerHTML = "<i></i> ERRO";
+    setEngineMessage("Falha na prévia", error.message || "Confira o motor e a gravação de referência.");
+    notify(error.message || "Falha ao sintetizar a prévia.");
+  } finally {
+    generationBusy = false;
+    clonePreviewBusy = false;
+    updateGenerateButton();
+  }
 });
 
+document.querySelector("#stopPreview").addEventListener("click", () => {
+  const player = document.querySelector("#previewAudio");
+  player.pause();
+  try { player.currentTime = 0; } catch {}
+});
 document.querySelector("#playPreview").addEventListener("click", async () => {
   const player = document.querySelector("#previewAudio");
   if (player.paused) {

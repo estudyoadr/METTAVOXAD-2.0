@@ -12,6 +12,7 @@ let worker;
 let stdoutBuffer = '';
 let workerReady = false;
 let workerFailure = null;
+const previewCache = new Map();
 const pending = new Map();
 function readJson(name, fallback) {
   try { return JSON.parse(fs.readFileSync(dataFile(name), 'utf8')); }
@@ -105,33 +106,137 @@ function engineRequest(payload) {
   });
 }
 
-ipcMain.handle('vozlab:add-voice', async (_event, requestedName) => {
-  const displayName = typeof requestedName === 'string' ? requestedName.trim().slice(0, 50) : '';
-  if (!displayName) return { ok: false, error: 'Digite um nome para o perfil de voz.' };
+function findDraft(draftId) {
+  if (typeof draftId !== 'string' || !/^[0-9a-f-]{36}$/i.test(draftId)) return null;
+  const folder = path.join(dataDir(), 'drafts');
+  if (!fs.existsSync(folder)) return null;
+  const file = fs.readdirSync(folder).find(name => name.startsWith(draftId + '.'));
+  return file ? path.join(folder, file) : null;
+}
+ipcMain.handle('vozlab:prepare-voice', async () => {
   const picked = await dialog.showOpenDialog({
-    title: 'Escolha uma gravação de voz autorizada',
+    title: 'Escolha uma gravação limpa e autorizada',
     properties: ['openFile'],
     filters: [{ name: 'Áudio', extensions: ['wav', 'mp3', 'flac', 'm4a', 'ogg'] }]
   });
-  if (picked.canceled || !picked.filePaths[0]) return { ok: false };
+  if (picked.canceled || !picked.filePaths[0]) return { ok: false, canceled: true };
   const source = picked.filePaths[0];
-  const ext = path.extname(source).toLowerCase();
-  const profileId = crypto.randomUUID();
-  const profileDir = path.join(dataDir(), 'voices', profileId);
-  fs.mkdirSync(profileDir, { recursive: true });
-  const reference = path.join(profileDir, `reference${ext}`);
-  fs.copyFileSync(source, reference);
-  const profiles = readJson('voices.json', []);
-  profiles.push({ id: profileId, name: displayName, reference, addedAt: new Date().toISOString(), consentConfirmed: true });
-  writeJson('voices.json', profiles);
-  return { ok: true, id: profileId, name: displayName };
+  const draftId = crypto.randomUUID();
+  const folder = path.join(dataDir(), 'drafts');
+  fs.mkdirSync(folder, { recursive: true });
+  const destination = path.join(folder, draftId + path.extname(source).toLowerCase());
+  fs.copyFileSync(source, destination);
+  return { ok: true, draftId };
 });
-
+ipcMain.handle('vozlab:preview-draft', async (_event, request) => {
+  const referencePath = findDraft(request?.draftId);
+  if (!referencePath || !fs.existsSync(referencePath)) return { ok: false, error: 'A gravação temporária não foi encontrada. Escolha o áudio novamente.' };
+  const stat = fs.statSync(referencePath);
+  const cacheKey = ['draft', request.draftId, stat.size, stat.mtimeMs, request.pace, request.expression, request.pauses].join(':');
+  const cached = previewCache.get(cacheKey);
+  if (cached?.path && fs.existsSync(cached.path)) {
+    return { ok: true, path: cached.path, url: pathToFileURL(cached.path).href, device: cached.device, cached: true };
+  }
+  const result = await engineRequest({
+    command: 'generate', voicePath: referencePath,
+    text: 'Olá! Esta é uma amostra da voz que você está criando. Ouça o resultado antes de salvar o perfil.',
+    pace: request.pace, expression: request.expression, pauses: request.pauses
+  });
+  if (result.ok) {
+    result.url = pathToFileURL(result.path).href;
+    previewCache.set(cacheKey, { path: result.path, device: result.device });
+  }
+  return result;
+});
+ipcMain.handle('vozlab:commit-voice-draft', (_event, request) => {
+  if (!request?.heardPreview || ![...previewCache.keys()].some(key => key.startsWith('draft:' + request.draftId + ':'))) {
+    return { ok: false, error: 'Gere e ouça a prévia da clonagem antes de salvar o perfil.' };
+  }
+  const displayName = typeof request?.name === 'string' ? request.name.trim().slice(0, 50) : '';
+  if (!displayName) return { ok: false, error: 'Digite um nome para o perfil de voz.' };
+  const draftPath = findDraft(request?.draftId);
+  if (!draftPath || !fs.existsSync(draftPath)) return { ok: false, error: 'A gravação temporária expirou. Escolha o áudio e faça a prévia novamente.' };
+  const profiles = readJson('voices.json', []);
+  const existing = request.profileId ? profiles.find(item => item.id === request.profileId) : null;
+  if (request.profileId && !existing) return { ok: false, error: 'O perfil que você está substituindo não foi encontrado.' };
+  const id = existing?.id || crypto.randomUUID();
+  const profileDir = path.join(dataDir(), 'voices', id);
+  fs.mkdirSync(profileDir, { recursive: true });
+  const reference = path.join(profileDir, 'reference' + path.extname(draftPath).toLowerCase());
+  const oldReference = existing?.reference;
+  fs.copyFileSync(draftPath, reference);
+  const profile = existing || { id, addedAt: new Date().toISOString(), consentConfirmed: true };
+  profile.name = displayName;
+  profile.reference = reference;
+  profile.updatedAt = new Date().toISOString();
+  if (!existing) profiles.push(profile);
+  writeJson('voices.json', profiles);
+  if (oldReference && path.resolve(oldReference) !== path.resolve(reference)) {
+    try { fs.rmSync(oldReference, { force: true }); } catch {}
+  }
+  fs.rmSync(draftPath, { force: true });
+  previewCache.clear();
+  return { ok: true, id, name: displayName, replaced: Boolean(existing) };
+});
+ipcMain.handle('vozlab:discard-voice-draft', (_event, draftId) => {
+  const draftPath = findDraft(draftId);
+  if (draftPath) fs.rmSync(draftPath, { force: true });
+  for (const [key, cached] of previewCache) {
+    if (key.startsWith('draft:' + draftId + ':')) {
+      if (cached?.path) fs.rmSync(cached.path, { force: true });
+      previewCache.delete(key);
+    }
+  }
+  return { ok: true };
+});
 ipcMain.handle('vozlab:get-profiles', () => readJson('voices.json', []));
+ipcMain.handle('vozlab:rename-voice', (_event, { profileId, name }) => {
+  const displayName = typeof name === 'string' ? name.trim().slice(0, 50) : '';
+  if (!displayName) return { ok: false, error: 'Digite um nome para o perfil de voz.' };
+  const profiles = readJson('voices.json', []);
+  const profile = profiles.find(item => item.id === profileId);
+  if (!profile) return { ok: false, error: 'Perfil de voz não encontrado.' };
+  profile.name = displayName;
+  profile.updatedAt = new Date().toISOString();
+  writeJson('voices.json', profiles);
+  return { ok: true, id: profile.id, name: profile.name };
+});
+ipcMain.handle('vozlab:delete-voice', (_event, profileId) => {
+  const profiles = readJson('voices.json', []);
+  if (!profiles.some(item => item.id === profileId)) return { ok: false, error: 'Perfil de voz não encontrado.' };
+  writeJson('voices.json', profiles.filter(item => item.id !== profileId));
+  writeJson('styles.json', readJson('styles.json', []).filter(item => item.voiceId !== profileId));
+  fs.rmSync(path.join(dataDir(), 'voices', profileId), { recursive: true, force: true });
+  previewCache.clear();
+  return { ok: true };
+});
 ipcMain.handle('vozlab:preview-voice', (_event, profileId) => {
   const voice = readJson('voices.json', []).find(item => item.id === profileId);
   if (!voice || !fs.existsSync(voice.reference)) return { ok: false, error: 'A gravação de referência não foi encontrada.' };
   return { ok: true, url: pathToFileURL(voice.reference).href };
+});
+ipcMain.handle('vozlab:preview-clone', async (_event, request) => {
+  const voice = readJson('voices.json', []).find(item => item.id === request.voiceId);
+  if (!voice || !fs.existsSync(voice.reference)) return { ok: false, error: 'A gravação de referência não foi encontrada.' };
+  const style = readJson('styles.json', []).find(item => item.id === request.styleId && item.voiceId === voice.id && item.reference && fs.existsSync(item.reference));
+  const referencePath = style?.reference || voice.reference;
+  const stat = fs.statSync(referencePath);
+  const cacheKey = ['saved', voice.id, style?.id || '', stat.size, stat.mtimeMs, request.pace, request.expression, request.pauses].join(':');
+  const cached = previewCache.get(cacheKey);
+  if (cached?.path && fs.existsSync(cached.path)) {
+    return { ok: true, path: cached.path, url: pathToFileURL(cached.path).href, device: cached.device, referenceStyle: style?.name || null, cached: true };
+  }
+  const result = await engineRequest({
+    command: 'generate', voicePath: referencePath,
+    text: 'Olá! Esta é uma amostra curta da voz selecionada. Ouça o resultado antes de escrever sua locução.',
+    pace: request.pace, expression: request.expression, pauses: request.pauses
+  });
+  if (result.ok) {
+    result.url = pathToFileURL(result.path).href;
+    result.referenceStyle = style?.name || null;
+    previewCache.set(cacheKey, { path: result.path, device: result.device });
+  }
+  return result;
 });
 ipcMain.handle('vozlab:get-styles', () => readJson('styles.json', []));
 ipcMain.handle('vozlab:save-style', (_event, style) => {
