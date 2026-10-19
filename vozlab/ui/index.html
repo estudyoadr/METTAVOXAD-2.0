@@ -99,7 +99,7 @@
             <div class="eyebrow">PERFIS SALVOS</div>
             <div class="profile-title"><h2>Seu espaço criativo</h2><span class="count-pill" id="savedCount">0</span></div>
             <p>Guarde combinações de voz e interpretação para recuperar sua assinatura em um clique.</p>
-            <button id="openProfiles" class="outline-button">＋ &nbsp; Criar primeiro perfil</button>
+            <button id="openProfiles" class="outline-button">＋ &nbsp; Criar perfil de voz</button>
           </section>
 
           <div class="privacy-note"><span>◈</span><p><strong>Privado por padrão.</strong> As gravações e os perfis ficam no seu computador.</p></div>
@@ -109,6 +109,17 @@
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="styleDialog" class="style-dialog">
+    <form id="styleForm" method="dialog">
+      <div class="eyebrow">NOVO ESTILO DE LOCUÇÃO</div>
+      <h2>Nomeie sua interpretação</h2>
+      <p>Depois de confirmar, escolha uma gravação limpa da mesma pessoa do perfil selecionado. Essa amostra será usada como referência vocal deste estilo.</p>
+      <label class="dialog-label" for="styleName">Nome do estilo</label>
+      <input id="styleName" name="styleName" maxlength="40" placeholder="Ex.: Comercial de impacto" autocomplete="off" required />
+      <label class="consent-row"><input id="styleConsent" type="checkbox" /><span>Confirmo que tenho autorização para usar essa gravação e que ela corresponde à voz do perfil selecionado.</span></label>
+      <div class="dialog-actions"><button id="cancelStyle" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Continuar para escolher áudio</button></div>
+    </form>
+  </dialog>
   <script src="app.js"></script>
 </body>
 </html>
