@@ -59,8 +59,9 @@ function addVoice() {
   document.querySelector("#voiceName").value = "";
   document.querySelector("#voiceConsent").checked = false;
   const dialog = document.querySelector("#voiceDialog");
-  dialog.showModal();
-  requestAnimationFrame(() => document.querySelector("#voiceName").focus());
+  if (!dialog.open) dialog.showModal();
+  const nameField = document.querySelector("#voiceName");
+  setTimeout(() => { nameField.focus(); nameField.select(); }, 0);
 }
 document.querySelectorAll("#addVoice,#addVoiceTile,#openProfiles").forEach(button => button.addEventListener("click", addVoice));
 document.querySelector("#cancelVoice").addEventListener("click", () => document.querySelector("#voiceDialog").close());
@@ -91,9 +92,12 @@ async function renderVoices() {
   placeholder.hidden = profiles.length > 0;
   if (profiles.length && !profiles.some(profile => profile.id === selectedVoiceId)) selectedVoiceId = profiles[0].id;
   profiles.forEach(profile => {
+    const row = document.createElement("div");
+    row.className = "saved-voice-row";
     const button = document.createElement("button");
     button.className = `voice-option saved-voice-option${profile.id === selectedVoiceId ? " selected" : ""}`;
     button.type = "button";
+    button.setAttribute("aria-label", `Selecionar perfil ${profile.name}`);
     const orb = document.createElement("span");
     orb.className = "voice-orb blue";
     const initials = document.createElement("span");
@@ -116,7 +120,26 @@ async function renderVoices() {
       renderStyles();
       updateGenerateButton();
     });
-    picker.insertBefore(button, picker.querySelector(".add-voice-option"));
+    const audition = document.createElement("button");
+    audition.type = "button";
+    audition.className = "voice-audition";
+    audition.textContent = "▶ Ouvir";
+    audition.title = `Ouvir a gravação do perfil ${profile.name}`;
+    audition.addEventListener("click", async () => {
+      try {
+        const result = await window.vozlab?.previewVoice?.(profile.id);
+        if (!result?.ok) throw new Error(result?.error || "A gravação de referência não foi encontrada.");
+        const player = document.querySelector("#referenceAudio");
+        player.pause();
+        player.src = result.url;
+        player.load();
+        await player.play();
+      } catch (error) {
+        notify(error.message || "Não foi possível reproduzir a gravação de referência.");
+      }
+    });
+    row.append(button, audition);
+    picker.insertBefore(row, picker.querySelector(".add-voice-option"));
   });
   await renderStyles();
   updateGenerateButton();

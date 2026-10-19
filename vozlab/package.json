@@ -1,6 +1,6 @@
 {
   "name": "vozlab-desktop",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Mettavox Clonner — estúdio local de clonagem de voz e locução",
   "main": "electron/main.cjs",
