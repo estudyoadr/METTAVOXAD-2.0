@@ -109,11 +109,22 @@ document.querySelector("#manageVoice").addEventListener("click", async () => {
 document.querySelector("#addStyle").addEventListener("click", async () => {
   if (!window.vozlab?.addStyle) return notify("O cadastro de gravação de estilo será feito no app Windows.");
   if (!selectedVoiceId) return notify("Cadastre ou selecione uma voz antes de criar um estilo personalizado.");
-  if (!window.confirm("Esta gravação será usada como referência de voz e interpretação. Ela precisa ser da mesma pessoa deste perfil. Continuar?")) return;
-  const name = window.prompt("Nome deste estilo de locução:", "Meu estilo");
-  if (!name?.trim()) return;
-  const result = await window.vozlab.addStyle({voiceId: selectedVoiceId, name: name.trim(), pace: +document.querySelector("#pace").value, expression: +document.querySelector("#expression").value, pauses: +document.querySelector("#pauses").value});
+  const dialog = document.querySelector("#styleDialog");
+  document.querySelector("#styleName").value = "";
+  document.querySelector("#styleConsent").checked = false;
+  dialog.showModal();
+  document.querySelector("#styleName").focus();
+});
+document.querySelector("#cancelStyle").addEventListener("click", () => document.querySelector("#styleDialog").close());
+document.querySelector("#styleForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const name = document.querySelector("#styleName").value.trim();
+  if (!name) return notify("Digite um nome para este estilo.");
+  if (!document.querySelector("#styleConsent").checked) return notify("Confirme que a gravação pertence à mesma pessoa ou foi autorizada.");
+  document.querySelector("#styleDialog").close();
+  const result = await window.vozlab.addStyle({voiceId: selectedVoiceId, name, pace: +document.querySelector("#pace").value, expression: +document.querySelector("#expression").value, pauses: +document.querySelector("#pauses").value});
   if (result?.ok) { selectedStyleId = result.id; await renderStyles(); await renderSavedCount(); notify(`Estilo “${result.name}” salvo neste computador.`); }
+  else if (result?.error) notify(result.error);
 });
 document.querySelector("#saveStyle").addEventListener("click", async () => {
   const profile = {id: selectedStyleId, voiceId: selectedVoiceId, name: selectedStyle, pace: +document.querySelector("#pace").value, expression: +document.querySelector("#expression").value, pauses: +document.querySelector("#pauses").value};
@@ -174,7 +185,7 @@ async function checkEngine() {
   const result = await window.vozlab.getEngineStatus();
   engineStatus = result || {engineInstalled: false, modelReady: false};
   if (!result?.engineInstalled) {
-    setEngineMessage("Motor de voz indisponível", "Esta compilação não contém os componentes de clonagem.");
+    setEngineMessage("Motor de voz indisponível", result?.error ? `Falha ao iniciar: ${result.error}` : "O motor local não respondeu. Verifique o diagnóstico da compilação.");
   } else if (result.modelReady) {
     setEngineMessage(`Motor pronto · ${result.device || "CPU"}`, "Use uma gravação sua ou autorizada como referência.", true);
   } else {
