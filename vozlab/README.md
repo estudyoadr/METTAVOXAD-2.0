@@ -1,4 +1,4 @@
-# VOZLAB
+# Mettavox Clonner
 
 App Windows x64 para clonagem local de voz em português brasileiro, geração de locuções e organização de perfis de voz e interpretação.
 
@@ -7,7 +7,7 @@ App Windows x64 para clonagem local de voz em português brasileiro, geração d
 - O perfil de voz guarda uma gravação de referência autorizada no computador.
 - Estilos salvos ficam vinculados a um perfil. Uma amostra de estilo serve como áudio de referência para reproduzir a interpretação; use uma gravação da mesma pessoa do perfil. Isso é importante porque o motor usa o mesmo áudio para timbre e interpretação.
 - O texto é sintetizado pelo pacote PT-BR do Chatterbox. Ritmo, expressividade e pausa entre frases controlam parâmetros reais da geração.
-- O WAV gerado fica na pasta local do VOZLAB e pode ser ouvido ou exportado pelo app.
+- O WAV gerado fica na pasta local do Mettavox Clonner e pode ser ouvido ou exportado pelo app.
 - O modelo é baixado na primeira geração. O checkpoint específico de PT-BR tem aproximadamente 2,14 GB, além dos componentes compartilhados.
 - Sem conexão à internet na primeira configuração, a geração não funciona. Depois de baixar o modelo, a inferência é local.
 - O motor preserva a marca d'água perceptual incluída pelo Chatterbox.
