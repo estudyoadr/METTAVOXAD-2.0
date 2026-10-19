@@ -42,6 +42,8 @@ def main() -> int:
         )
     if api.get("checkpointFilename") != "t3_mtl23ls_v2.safetensors":
         raise RuntimeError(f"Unexpected local checkpoint mapping: {api!r}")
+    if api.get("s3genCheckpointCompat") is not True:
+        raise RuntimeError(f"S3 checkpoint compatibility test failed: {api!r}")
     print(f"Frozen engine API and IPC responded successfully: {json.dumps(api, ensure_ascii=False)}")
     return 0
 

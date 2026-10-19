@@ -24,6 +24,7 @@ PTBR_DECODER = "s3gen_v3.pt"
 MODEL_FILES = ("ve.pt", "grapheme_mtl_merged_expanded_v1.json")
 model = None
 model_device = "cpu"
+S3GEN_IGNORABLE_MISSING = frozenset({"tokenizer._mel_filters", "tokenizer.window"})
 
 
 def emit(payload: dict) -> None:
@@ -54,6 +55,76 @@ def installed_status() -> dict:
         return {"engineInstalled": True, "modelReady": ready, "device": device}
     except Exception as exc:
         return {"engineInstalled": False, "modelReady": False, "device": None, "error": str(exc)}
+
+
+def install_s3gen_checkpoint_compat() -> None:
+    """Allow only two deterministic tokenizer buffers omitted by s3gen_v3.pt."""
+    from chatterbox.models.s3gen import S3Gen
+
+    if getattr(S3Gen, "_vozlab_checkpoint_compat", False):
+        return
+
+    original_load_state_dict = S3Gen.load_state_dict
+
+    def load_state_dict_compatible(self, state_dict, strict=True, assign=False):
+        if not strict:
+            return original_load_state_dict(self, state_dict, strict=False, assign=assign)
+
+        result = original_load_state_dict(self, state_dict, strict=False, assign=assign)
+        missing = set(result.missing_keys)
+        unexpected = set(result.unexpected_keys)
+        invalid_missing = missing - S3GEN_IGNORABLE_MISSING
+        if invalid_missing or unexpected:
+            details = []
+            if invalid_missing:
+                details.append(f"chaves ausentes: {sorted(invalid_missing)}")
+            if unexpected:
+                details.append(f"chaves inesperadas: {sorted(unexpected)}")
+            raise RuntimeError("Checkpoint S3 incompatível; " + "; ".join(details))
+        return result
+
+    S3Gen.load_state_dict = load_state_dict_compatible
+    S3Gen._vozlab_checkpoint_compat = True
+
+
+def verify_s3gen_checkpoint_compat() -> bool:
+    """Exercise the allowlist and ensure other missing weights still fail."""
+    import torch
+    from torch import nn
+    from chatterbox.models.s3gen import S3Gen
+
+    install_s3gen_checkpoint_compat()
+
+    class ProbeTokenizer(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.register_buffer("_mel_filters", torch.ones(2))
+            self.register_buffer("window", torch.ones(2))
+
+    class ProbeModule(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.tokenizer = ProbeTokenizer()
+            self.weight = nn.Parameter(torch.ones(1))
+
+    probe = ProbeModule()
+    state = probe.state_dict()
+    state.pop("tokenizer._mel_filters")
+    state.pop("tokenizer.window")
+    compatible = S3Gen.load_state_dict(probe, state)
+    if set(compatible.missing_keys) != S3GEN_IGNORABLE_MISSING or compatible.unexpected_keys:
+        raise RuntimeError(f"Compatibilidade S3 não validou os buffers esperados: {compatible}")
+
+    invalid_state = probe.state_dict()
+    invalid_state.pop("weight")
+    try:
+        S3Gen.load_state_dict(probe, invalid_state)
+    except RuntimeError as exc:
+        if "chaves ausentes" not in str(exc):
+            raise
+    else:
+        raise RuntimeError("O teste permitiu uma chave de peso obrigatória ausente.")
+    return True
 
 
 def load_model() -> None:
@@ -102,6 +173,7 @@ def load_model() -> None:
         if Path(asset).resolve() != decoder_target.resolve():
             shutil.copyfile(asset, decoder_target)
 
+    install_s3gen_checkpoint_compat()
     model_device = "cuda" if torch.cuda.is_available() else "cpu"
     emit({"event": "progress", "phase": "loading", "message": f"Carregando modelo na memória ({model_device.upper()})…"})
     model = ChatterboxMultilingualTTS.from_local(str(folder), device=model_device)
@@ -121,10 +193,12 @@ def engine_api_selftest() -> dict:
         raise RuntimeError("API incompatível: from_local não aceita a pasta do modelo como argumento posicional.")
     if "device" not in parameters and not any(p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values()):
         raise RuntimeError("API incompatível: from_local não aceita o parâmetro device.")
+    compat_ok = verify_s3gen_checkpoint_compat()
     return {
         "engineInstalled": True,
         "fromLocalParameters": list(parameters),
         "checkpointFilename": LOCAL_T3_FILENAME,
+        "s3genCheckpointCompat": compat_ok,
     }
 
 
