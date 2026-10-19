@@ -135,6 +135,10 @@ ipcMain.handle('vozlab:add-voice', async () => {
 ipcMain.handle('vozlab:get-profiles', () => readJson('voices.json', []));
 ipcMain.handle('vozlab:get-styles', () => readJson('styles.json', []));
 ipcMain.handle('vozlab:save-style', (_event, style) => {
+  const voices = readJson('voices.json', []);
+  if (!style.voiceId || !voices.some(voice => voice.id === style.voiceId)) {
+    return { ok: false, error: 'Selecione uma voz antes de salvar um estilo.' };
+  }
   const styles = readJson('styles.json', []);
   const existing = styles.find(item => item.id === style.id && item.voiceId === style.voiceId);
   if (existing) {
@@ -146,7 +150,8 @@ ipcMain.handle('vozlab:save-style', (_event, style) => {
     return { ok: true, id: existing.id, name: existing.name };
   }
   const id = crypto.randomUUID();
-  styles.push({ id, ...style, savedAt: new Date().toISOString() });
+  const { id: _requestedId, ...fields } = style;
+  styles.push({ ...fields, id, savedAt: new Date().toISOString() });
   writeJson('styles.json', styles);
   return { ok: true, id, name: style.name };
 });
@@ -195,13 +200,15 @@ ipcMain.handle('vozlab:generate', async (_event, request) => {
 });
 
 ipcMain.handle('vozlab:export-audio', async (_event, sourcePath) => {
-  if (!sourcePath || !fs.existsSync(sourcePath)) return { ok: false };
+  const generatedRoot = `${path.resolve(dataDir(), 'generated')}${path.sep}`;
+  const resolvedSource = sourcePath ? path.resolve(sourcePath) : '';
+  if (!resolvedSource.startsWith(generatedRoot) || !fs.existsSync(resolvedSource) || path.extname(resolvedSource).toLowerCase() !== '.wav') return { ok: false };
   const picked = await dialog.showSaveDialog({
-    title: 'Exportar locução em WAV', defaultPath: path.basename(sourcePath),
+    title: 'Exportar locução em WAV', defaultPath: path.basename(resolvedSource),
     filters: [{ name: 'WAV', extensions: ['wav'] }]
   });
   if (picked.canceled || !picked.filePath) return { ok: false };
-  fs.copyFileSync(sourcePath, picked.filePath);
+  fs.copyFileSync(resolvedSource, picked.filePath);
   return { ok: true, path: picked.filePath };
 });
 
