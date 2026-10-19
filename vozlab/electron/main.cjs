@@ -209,4 +209,10 @@ app.whenReady().then(() => {
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
+app.on('before-quit', () => {
+  if (worker && !worker.killed) {
+    try { worker.stdin.write(`${JSON.stringify({command: 'shutdown', id: crypto.randomUUID()})}\n`); } catch {}
+    worker.kill();
+  }
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
