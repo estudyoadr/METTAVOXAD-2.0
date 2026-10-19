@@ -24,7 +24,7 @@ function writeJson(name, data) {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1420, height: 940, minWidth: 1050, minHeight: 740,
-    backgroundColor: '#080b16', title: 'VOZLAB — Estúdio de voz',
+    backgroundColor: '#080b16', title: 'Mettavox Clonner — Estúdio de voz',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
