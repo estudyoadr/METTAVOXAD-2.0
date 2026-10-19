@@ -19,6 +19,7 @@ from pathlib import Path
 BASE_REPO = "ResembleAI/chatterbox"
 PTBR_REPO = "ResembleAI/Chatterbox-Multilingual-pt-br"
 PTBR_CHECKPOINT = "t3_pt_br.safetensors"
+LOCAL_T3_FILENAME = "t3_mtl23ls_v2.safetensors"
 PTBR_DECODER = "s3gen_v3.pt"
 MODEL_FILES = ("ve.pt", "grapheme_mtl_merged_expanded_v1.json")
 model = None
@@ -47,7 +48,7 @@ def installed_status() -> dict:
         from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # noqa: F401
 
         folder = model_dir()
-        required = (*MODEL_FILES, PTBR_CHECKPOINT, "s3gen.pt")
+        required = (*MODEL_FILES, LOCAL_T3_FILENAME, "s3gen.pt")
         ready = all((folder / file).is_file() for file in required)
         device = "CUDA" if torch.cuda.is_available() else "CPU"
         return {"engineInstalled": True, "modelReady": ready, "device": device}
@@ -74,22 +75,57 @@ def load_model() -> None:
         allow_patterns=list(MODEL_FILES),
         local_dir=str(folder),
     )
-    for filename, target_name in ((PTBR_CHECKPOINT, PTBR_CHECKPOINT), (PTBR_DECODER, "s3gen.pt")):
+    # chatterbox-tts 0.1.7 reads this fixed checkpoint filename from_local().
+    # Migrate files downloaded by the previous app build without downloading them again.
+    checkpoint_target = folder / LOCAL_T3_FILENAME
+    legacy_checkpoint = folder / PTBR_CHECKPOINT
+    if not checkpoint_target.is_file():
+        if legacy_checkpoint.is_file():
+            shutil.copyfile(legacy_checkpoint, checkpoint_target)
+        else:
+            emit({"event": "progress", "phase": "assets", "message": "Baixando o checkpoint PT-BR…"})
+            asset = hf_hub_download(
+                repo_id=PTBR_REPO,
+                filename=PTBR_CHECKPOINT,
+                local_dir=str(folder),
+            )
+            shutil.copyfile(asset, checkpoint_target)
+
+    decoder_target = folder / "s3gen.pt"
+    if not decoder_target.is_file():
+        emit({"event": "progress", "phase": "assets", "message": "Baixando o decodificador de áudio…"})
         asset = hf_hub_download(
             repo_id=PTBR_REPO,
-            filename=filename,
+            filename=PTBR_DECODER,
             local_dir=str(folder),
         )
-        target = folder / target_name
-        if Path(asset).resolve() != target.resolve():
-            shutil.copyfile(asset, target)
+        if Path(asset).resolve() != decoder_target.resolve():
+            shutil.copyfile(asset, decoder_target)
 
     model_device = "cuda" if torch.cuda.is_available() else "cpu"
     emit({"event": "progress", "phase": "loading", "message": f"Carregando modelo na memória ({model_device.upper()})…"})
-    model = ChatterboxMultilingualTTS.from_local(
-        str(folder), device=model_device, t3_model=PTBR_CHECKPOINT
-    )
+    model = ChatterboxMultilingualTTS.from_local(str(folder), device=model_device)
     emit({"event": "progress", "phase": "ready", "message": "Motor de voz pronto."})
+
+
+def engine_api_selftest() -> dict:
+    import inspect
+    from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+
+    signature = inspect.signature(ChatterboxMultilingualTTS.from_local)
+    parameters = signature.parameters
+    if not parameters:
+        raise RuntimeError("API incompatível: from_local não recebe a pasta do modelo.")
+    first = next(iter(parameters.values()))
+    if first.kind not in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
+        raise RuntimeError("API incompatível: from_local não aceita a pasta do modelo como argumento posicional.")
+    if "device" not in parameters and not any(p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values()):
+        raise RuntimeError("API incompatível: from_local não aceita o parâmetro device.")
+    return {
+        "engineInstalled": True,
+        "fromLocalParameters": list(parameters),
+        "checkpointFilename": LOCAL_T3_FILENAME,
+    }
 
 
 def split_sentences(text: str) -> list[str]:
@@ -180,6 +216,8 @@ def main() -> None:
             command = request.get("command")
             if command == "status":
                 result = installed_status()
+            elif command == "selftest":
+                result = engine_api_selftest()
             elif command == "generate":
                 result = generate(request)
             elif command == "shutdown":

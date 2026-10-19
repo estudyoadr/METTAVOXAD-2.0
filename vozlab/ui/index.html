@@ -48,7 +48,7 @@
                 <span class="add-orb">＋</span><span class="voice-copy"><strong>Adicionar voz</strong><small>Com autorização</small></span>
               </button>
             </div>
-            <div class="voice-foot"><span class="mini-wave">▂ ▄ ▆ ▃ ▇ ▄ ▂ ▅ ▃ ▆ ▂</span><span>Referência vocal selecionada</span><button id="manageVoice" class="tiny-link">Ver gravações</button></div>
+            <div class="voice-foot"><span class="mini-wave">▂ ▄ ▆ ▃ ▇ ▄ ▂ ▅ ▃ ▆ ▂</span><span>Referência vocal selecionada</span><button id="previewVoice" class="tiny-link" type="button" disabled>▶ Ouvir voz</button><button id="manageVoice" class="tiny-link" type="button">Ver gravações</button></div>
           </section>
 
           <section class="card style-card">
@@ -105,10 +105,22 @@
           <div class="privacy-note"><span>◈</span><p><strong>Privado por padrão.</strong> As gravações e os perfis ficam no seu computador.</p></div>
         </aside>
       </div>
-      <footer class="statusbar"><span>METTAVOX CLONNER <i>0.1.0</i></span><span><b></b> PROCESSAMENTO LOCAL</span><span>MODELO: EM AVALIAÇÃO</span></footer>
+      <footer class="statusbar"><span>METTAVOX CLONNER <i>0.1.1</i></span><span><b></b> PROCESSAMENTO LOCAL</span><span>MODELO: EM AVALIAÇÃO</span></footer>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="voiceDialog" class="style-dialog">
+    <form id="voiceForm" method="dialog">
+      <div class="eyebrow">NOVO PERFIL DE VOZ</div>
+      <h2>Nomeie esta voz</h2>
+      <p>Escolha um nome para identificar a voz. Em seguida, selecione uma gravação limpa de pelo menos 2 segundos. Use apenas uma gravação sua ou autorizada.</p>
+      <label class="dialog-label" for="voiceName">Nome do perfil</label>
+      <input id="voiceName" name="voiceName" type="text" maxlength="50" placeholder="Ex.: Minha voz — institucional" autocomplete="off" required />
+      <label class="consent-row"><input id="voiceConsent" type="checkbox" /><span>Confirmo que sou a pessoa gravada ou tenho autorização para clonar esta voz.</span></label>
+      <div class="dialog-actions"><button id="cancelVoice" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Continuar para escolher áudio</button></div>
+    </form>
+  </dialog>
+  <audio id="referenceAudio" hidden></audio>
   <dialog id="styleDialog" class="style-dialog">
     <form id="styleForm" method="dialog">
       <div class="eyebrow">NOVO ESTILO DE LOCUÇÃO</div>

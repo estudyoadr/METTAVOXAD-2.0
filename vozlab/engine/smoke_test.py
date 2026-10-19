@@ -9,6 +9,7 @@ import sys
 def main() -> int:
     executable = sys.argv[1]
     requests = (
+        {"id": "smoke-selftest", "command": "selftest"},
         {"id": "smoke-status", "command": "status"},
         {"id": "smoke-shutdown", "command": "shutdown"},
     )
@@ -31,14 +32,17 @@ def main() -> int:
             messages.append(json.loads(line))
         except json.JSONDecodeError:
             continue
+    api = next((item for item in messages if item.get("id") == "smoke-selftest"), None)
     status = next((item for item in messages if item.get("id") == "smoke-status"), None)
-    if process.returncode != 0 or not status or not status.get("engineInstalled"):
-        detail = status.get("error") if status else "No status response from bundled worker."
+    if process.returncode != 0 or not api or not api.get("engineInstalled") or not status or not status.get("engineInstalled"):
+        detail = (api or status or {}).get("error") or "No valid engine/API response from bundled worker."
         raise RuntimeError(
             f"Frozen engine smoke test failed: {detail}; exit={process.returncode}; "
             f"stdout={stdout!r}; stderr={stderr!r}"
         )
-    print(f"Frozen engine responded successfully: {json.dumps(status, ensure_ascii=False)}")
+    if api.get("checkpointFilename") != "t3_mtl23ls_v2.safetensors":
+        raise RuntimeError(f"Unexpected local checkpoint mapping: {api!r}")
+    print(f"Frozen engine API and IPC responded successfully: {json.dumps(api, ensure_ascii=False)}")
     return 0
 
 

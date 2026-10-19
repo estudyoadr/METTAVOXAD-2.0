@@ -105,7 +105,9 @@ function engineRequest(payload) {
   });
 }
 
-ipcMain.handle('vozlab:add-voice', async () => {
+ipcMain.handle('vozlab:add-voice', async (_event, requestedName) => {
+  const displayName = typeof requestedName === 'string' ? requestedName.trim().slice(0, 50) : '';
+  if (!displayName) return { ok: false, error: 'Digite um nome para o perfil de voz.' };
   const picked = await dialog.showOpenDialog({
     title: 'Escolha uma gravação de voz autorizada',
     properties: ['openFile'],
@@ -113,13 +115,6 @@ ipcMain.handle('vozlab:add-voice', async () => {
   });
   if (picked.canceled || !picked.filePaths[0]) return { ok: false };
   const source = picked.filePaths[0];
-  const consent = await dialog.showMessageBox({
-    type: 'warning', title: 'Autorização da voz',
-    message: 'Use apenas uma gravação sua ou de uma pessoa que autorizou a clonagem. Para uma identidade vocal melhor, escolha fala limpa, sem música nem eco, com cerca de 15 a 30 segundos. O motor usará os primeiros 20 segundos como referência.',
-    buttons: ['Tenho autorização e quero continuar', 'Cancelar'], defaultId: 0, cancelId: 1
-  });
-  if (consent.response === 1) return { ok: false };
-  const displayName = path.basename(source, path.extname(source)).slice(0, 50);
   const ext = path.extname(source).toLowerCase();
   const profileId = crypto.randomUUID();
   const profileDir = path.join(dataDir(), 'voices', profileId);
@@ -133,6 +128,11 @@ ipcMain.handle('vozlab:add-voice', async () => {
 });
 
 ipcMain.handle('vozlab:get-profiles', () => readJson('voices.json', []));
+ipcMain.handle('vozlab:preview-voice', (_event, profileId) => {
+  const voice = readJson('voices.json', []).find(item => item.id === profileId);
+  if (!voice || !fs.existsSync(voice.reference)) return { ok: false, error: 'A gravação de referência não foi encontrada.' };
+  return { ok: true, url: pathToFileURL(voice.reference).href };
+});
 ipcMain.handle('vozlab:get-styles', () => readJson('styles.json', []));
 ipcMain.handle('vozlab:save-style', (_event, style) => {
   const voices = readJson('voices.json', []);

@@ -8,6 +8,8 @@ const styles = {
 let selectedStyle = "Mercado";
 let selectedStyleId = null;
 let selectedVoiceId = null;
+let voiceProfiles = [];
+let generationBusy = false;
 let toastTimer;
 let engineStatus = {engineInstalled: false, modelReady: false};
 let currentAudioPath = null;
@@ -52,19 +54,37 @@ const script = document.querySelector("#script");
 script.addEventListener("input", () => {
   document.querySelector("#counter").textContent = `${script.value.length} caracteres`;
 });
-async function addVoice() {
+function addVoice() {
   if (!window.vozlab?.addVoice) return notify("O cadastro de voz será habilitado no app Windows.");
-  const result = await window.vozlab.addVoice();
-  if (result?.ok) {
-    selectedVoiceId = result.id;
-    await renderVoices();
-    notify(`Perfil “${result.name}” salvo neste computador.`);
-  }
+  document.querySelector("#voiceName").value = "";
+  document.querySelector("#voiceConsent").checked = false;
+  const dialog = document.querySelector("#voiceDialog");
+  dialog.showModal();
+  requestAnimationFrame(() => document.querySelector("#voiceName").focus());
 }
 document.querySelectorAll("#addVoice,#addVoiceTile,#openProfiles").forEach(button => button.addEventListener("click", addVoice));
+document.querySelector("#cancelVoice").addEventListener("click", () => document.querySelector("#voiceDialog").close());
+document.querySelector("#voiceForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const name = document.querySelector("#voiceName").value.trim();
+  if (!name) return notify("Digite um nome para este perfil.");
+  if (!document.querySelector("#voiceConsent").checked) return notify("Confirme que tem autorização para usar esta voz.");
+  document.querySelector("#voiceDialog").close();
+  try {
+    const result = await window.vozlab.addVoice(name);
+    if (result?.ok) {
+      selectedVoiceId = result.id;
+      await renderVoices();
+      notify(`Perfil “${result.name}” salvo neste computador.`);
+    } else if (result?.error) notify(result.error);
+  } catch (error) {
+    notify(error.message || "Não foi possível cadastrar a voz.");
+  }
+});
 async function renderVoices() {
   const profiles = await window.vozlab?.getProfiles?.();
   if (!profiles) return;
+  voiceProfiles = profiles;
   const picker = document.querySelector("#voicePicker");
   picker.querySelectorAll(".saved-voice-option").forEach(item => item.remove());
   const placeholder = picker.querySelector(".placeholder-voice");
@@ -169,7 +189,9 @@ function updateGenerateButton() {
   const button = document.querySelector("#generate");
   if (!button) return;
   const hasText = Boolean(document.querySelector("#script").value.trim());
-  button.disabled = !engineStatus.engineInstalled || !selectedVoiceId || !hasText;
+  button.disabled = generationBusy || !engineStatus.engineInstalled || !selectedVoiceId || !hasText;
+  const previewButton = document.querySelector("#previewVoice");
+  if (previewButton) previewButton.disabled = !voiceProfiles.some(profile => profile.id === selectedVoiceId);
   button.title = !engineStatus.engineInstalled ? "Motor local indisponível nesta compilação" : !selectedVoiceId ? "Cadastre uma referência de voz" : !hasText ? "Digite o texto da locução" : "Gerar com o perfil selecionado";
 }
 
@@ -195,7 +217,22 @@ async function checkEngine() {
 }
 
 window.vozlab?.onEngineProgress?.(message => {
-  setEngineMessage(message.message || "Preparando o motor…", "Aguarde; a primeira inicialização pode levar alguns minutos.");
+  const button = document.querySelector("#generate");
+  if (message.phase === "assets") {
+    if (generationBusy) button.textContent = "Baixando modelo…";
+    setEngineMessage(message.message || "Baixando componentes do modelo…", "Primeiro uso: download local dos arquivos PT-BR. Esta etapa pode levar alguns minutos.", true);
+  } else if (message.phase === "loading") {
+    if (generationBusy) button.textContent = "Carregando voz…";
+    setEngineMessage(message.message || "Carregando modelo na memória…", "O modelo está sendo preparado para gerar a locução.");
+  } else if (message.phase === "generating") {
+    if (generationBusy) button.textContent = message.current && message.total ? `Gerando ${message.current}/${message.total}…` : "Gerando áudio…";
+    setEngineMessage(message.message || "Gerando a locução…", message.total ? `Frase ${message.current || 0} de ${message.total}.` : "A geração pode levar alguns instantes.");
+  } else if (message.phase === "ready") {
+    if (generationBusy) button.textContent = "Finalizando áudio…";
+    setEngineMessage(message.message || "Motor de voz pronto.", "Preparando o resultado.");
+  } else {
+    setEngineMessage(message.message || "Preparando o motor…", "Aguarde; a primeira inicialização pode levar alguns minutos.");
+  }
 });
 
 document.querySelector("#generate").addEventListener("click", async () => {
@@ -203,8 +240,9 @@ document.querySelector("#generate").addEventListener("click", async () => {
   if (!selectedVoiceId) return notify("Cadastre ou selecione uma voz de referência.");
   if (!text) return notify("Digite o texto que deseja transformar em locução.");
   const button = document.querySelector("#generate");
+  generationBusy = true;
   button.disabled = true;
-  button.textContent = "Preparando…";
+  button.textContent = "Preparando motor…";
   document.querySelector("#previewState").innerHTML = "<i></i> GERANDO";
   setEngineMessage("Gerando locução…", "Se for o primeiro uso, o app baixa o modelo PT-BR.");
   try {
@@ -232,8 +270,24 @@ document.querySelector("#generate").addEventListener("click", async () => {
     setEngineMessage("Falha ao gerar", error.message || "Confira o motor e a gravação de referência.");
     notify(error.message || "Falha ao gerar a locução.");
   } finally {
+    generationBusy = false;
     button.innerHTML = "<span>✦</span> Gerar locução";
     updateGenerateButton();
+  }
+});
+
+document.querySelector("#previewVoice").addEventListener("click", async () => {
+  const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
+  if (!profile) return notify("Selecione uma voz salva para ouvir a gravação de referência.");
+  try {
+    const result = await window.vozlab?.previewVoice?.(profile.id);
+    if (!result?.ok) throw new Error(result?.error || "A gravação de referência não foi encontrada.");
+    const player = document.querySelector("#referenceAudio");
+    player.src = result.url;
+    player.load();
+    await player.play();
+  } catch (error) {
+    notify(error.message || "Não foi possível reproduzir a gravação de referência.");
   }
 });
 

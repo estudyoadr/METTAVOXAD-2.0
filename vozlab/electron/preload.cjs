@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('vozlab', {
-  addVoice: () => ipcRenderer.invoke('vozlab:add-voice'),
+  addVoice: name => ipcRenderer.invoke('vozlab:add-voice', name),
+  previewVoice: profileId => ipcRenderer.invoke('vozlab:preview-voice', profileId),
   getProfiles: () => ipcRenderer.invoke('vozlab:get-profiles'),
   getStyles: () => ipcRenderer.invoke('vozlab:get-styles'),
   saveStyle: style => ipcRenderer.invoke('vozlab:save-style', style),
