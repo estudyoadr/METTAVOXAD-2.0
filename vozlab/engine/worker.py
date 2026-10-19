@@ -28,6 +28,17 @@ model_device = "cpu"
 S3GEN_IGNORABLE_MISSING = frozenset({"tokenizer._mel_filters", "tokenizer.window"})
 
 
+def configure_stdio() -> None:
+    """Keep Electron's UTF-8 JSON IPC intact on Windows' legacy console encodings."""
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            errors = "replace" if stream is sys.stdin else "backslashreplace"
+            stream.reconfigure(encoding="utf-8", errors=errors)
+
+
+configure_stdio()
+
+
 def emit(payload: dict) -> None:
     sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
     sys.stdout.flush()
