@@ -13,6 +13,7 @@ let generationBusy = false;
 let toastTimer;
 let engineStatus = {engineInstalled: false, modelReady: false};
 let currentAudioPath = null;
+let activeAuditionButton = null;
 const toast = document.querySelector("#toast");
 function notify(message) {
   toast.textContent = message;
@@ -111,6 +112,7 @@ async function renderVoices() {
     const check = document.createElement("span"); check.className = "check"; check.textContent = profile.id === selectedVoiceId ? "✓" : "";
     button.append(orb, copy, check);
     button.addEventListener("click", () => {
+      stopReferenceAudio();
       selectedVoiceId = profile.id;
       selectedStyleId = null;
       picker.querySelectorAll(".voice-option").forEach(item => item.classList.remove("selected"));
@@ -126,17 +128,11 @@ async function renderVoices() {
     audition.textContent = "▶ Ouvir";
     audition.title = `Ouvir a gravação do perfil ${profile.name}`;
     audition.addEventListener("click", async () => {
-      try {
-        const result = await window.vozlab?.previewVoice?.(profile.id);
-        if (!result?.ok) throw new Error(result?.error || "A gravação de referência não foi encontrada.");
-        const player = document.querySelector("#referenceAudio");
-        player.pause();
-        player.src = result.url;
-        player.load();
-        await player.play();
-      } catch (error) {
-        notify(error.message || "Não foi possível reproduzir a gravação de referência.");
+      if (activeAuditionButton === audition) {
+        stopReferenceAudio();
+        return;
       }
+      await playReferenceAudio(profile, audition);
     });
     row.append(button, audition);
     picker.insertBefore(row, picker.querySelector(".add-voice-option"));
@@ -299,9 +295,18 @@ document.querySelector("#generate").addEventListener("click", async () => {
   }
 });
 
-document.querySelector("#previewVoice").addEventListener("click", async () => {
-  const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
-  if (!profile) return notify("Selecione uma voz salva para ouvir a gravação de referência.");
+function stopReferenceAudio() {
+  const player = document.querySelector("#referenceAudio");
+  player.pause();
+  try { player.currentTime = 0; } catch {}
+  if (activeAuditionButton) {
+    activeAuditionButton.textContent = activeAuditionButton.dataset.idleLabel || "▶ Ouvir";
+    activeAuditionButton.title = activeAuditionButton.dataset.idleTitle || "";
+  }
+  activeAuditionButton = null;
+}
+async function playReferenceAudio(profile, button) {
+  stopReferenceAudio();
   try {
     const result = await window.vozlab?.previewVoice?.(profile.id);
     if (!result?.ok) throw new Error(result?.error || "A gravação de referência não foi encontrada.");
@@ -309,9 +314,27 @@ document.querySelector("#previewVoice").addEventListener("click", async () => {
     player.src = result.url;
     player.load();
     await player.play();
+    if (button) {
+      button.dataset.idleLabel ||= button.textContent;
+      button.dataset.idleTitle ||= button.title;
+      button.textContent = "■ Parar";
+      button.title = "Parar prévia de " + profile.name;
+      activeAuditionButton = button;
+    }
   } catch (error) {
     notify(error.message || "Não foi possível reproduzir a gravação de referência.");
   }
+}
+document.querySelector("#referenceAudio").addEventListener("ended", stopReferenceAudio);
+document.querySelector("#previewVoice").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  if (activeAuditionButton === button) {
+    stopReferenceAudio();
+    return;
+  }
+  const profile = voiceProfiles.find(item => item.id === selectedVoiceId);
+  if (!profile) return notify("Selecione uma voz salva para ouvir a gravação de referência.");
+  await playReferenceAudio(profile, button);
 });
 
 document.querySelector("#playPreview").addEventListener("click", async () => {
