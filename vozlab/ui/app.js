@@ -98,6 +98,7 @@ async function renderVoices() {
     });
     picker.insertBefore(button, picker.querySelector(".add-voice-option"));
   });
+  await renderStyles();
   updateGenerateButton();
 }
 renderVoices();
@@ -118,7 +119,7 @@ document.querySelector("#saveStyle").addEventListener("click", async () => {
   const profile = {id: selectedStyleId, voiceId: selectedVoiceId, name: selectedStyle, pace: +document.querySelector("#pace").value, expression: +document.querySelector("#expression").value, pauses: +document.querySelector("#pauses").value};
   const result = await window.vozlab?.saveStyle?.(profile);
   if (result?.ok) { selectedStyleId = result.id; await renderStyles(); await renderSavedCount(); }
-  notify(result?.ok ? `Estilo “${result.name}” salvo.` : `Ajustes de “${selectedStyle}” prontos para salvar no app.`);
+  notify(result?.ok ? `Estilo “${result.name}” salvo.` : result?.error || "Não foi possível salvar este estilo.");
 });
 async function renderSavedCount() {
   const [voices, savedStyles] = await Promise.all([window.vozlab?.getProfiles?.(), window.vozlab?.getStyles?.()]);
