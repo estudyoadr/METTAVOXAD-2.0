@@ -1,0 +1,4 @@
+# The app builds a CPU-compatible Windows x64 worker. If CUDA is installed on
+# the user's machine, the worker detects it automatically when available.
+chatterbox-tts==0.1.7
+pyinstaller==6.15.0

@@ -1,0 +1,75 @@
+name: VOZLAB Windows x64
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["voice-cloning-app"]
+    paths:
+      - "vozlab/**"
+      - ".github/workflows/vozlab-windows.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Preparar Python para o motor de voz
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          architecture: x64
+
+      - name: Instalar motor PT-BR e empacotador
+        working-directory: vozlab
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r engine/requirements.txt
+
+      - name: Empacotar o motor local
+        working-directory: vozlab
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onedir --name VozLabEngine --distpath ../dist-engine --workpath ../build-engine `
+            --collect-all chatterbox --collect-all perth --collect-all librosa `
+            --collect-all transformers --collect-all tokenizers --collect-all s3tokenizer `
+            --collect-all conformer --collect-all safetensors --collect-all huggingface_hub `
+            --copy-metadata requests `
+            --hidden-import torchaudio --hidden-import soundfile engine/worker.py
+
+      - name: Instalar dependências
+        working-directory: vozlab
+        run: npm install --no-audit --no-fund
+
+      - name: Gerar instalador Windows x64
+        working-directory: vozlab
+        run: npm run dist:win
+
+      - name: Testar o motor dentro do pacote final do app
+        working-directory: vozlab
+        shell: pwsh
+        run: python engine/smoke_test.py dist/win-unpacked/resources/engine/VozLabEngine.exe
+
+      - name: Guardar instalador como artefato de compilação
+        uses: actions/upload-artifact@v4
+        with:
+          name: VOZLAB-Windows-x64
+          path: vozlab/dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
+

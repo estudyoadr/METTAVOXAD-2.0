@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080b16" />
+  <title>Mettavox Clonner — Estúdio de voz</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="brand-mark" title="Mettavox Clonner">M<span>•</span></div>
+      <button class="rail-button active" aria-label="Estúdio" title="Estúdio">◉</button>
+      <button class="rail-button" aria-label="Perfis de voz" title="Perfis de voz">♬</button>
+      <button class="rail-button" aria-label="Biblioteca" title="Biblioteca">▤</button>
+      <div class="rail-spacer"></div>
+      <button class="rail-button" aria-label="Configurações" title="Configurações">⚙</button>
+      <div class="avatar">MA</div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow"><span class="live-dot"></span> ESTÚDIO LOCAL</div>
+          <h1>Vozes com a sua assinatura.</h1>
+        </div>
+        <div class="top-actions">
+          <span class="local-badge"><span class="shield">◆</span> ÁUDIO NO SEU COMPUTADOR</span>
+          <button class="icon-button" title="Ajuda" aria-label="Ajuda">?</button>
+        </div>
+      </header>
+
+      <div class="content-grid">
+        <section class="studio-column">
+          <section class="card voice-card">
+            <div class="section-heading">
+              <div><div class="eyebrow">01 / IDENTIDADE</div><h2>Escolha a voz</h2></div>
+              <button id="addVoice" class="text-button">＋ Novo perfil</button>
+            </div>
+            <div class="voice-picker" id="voicePicker">
+              <button class="voice-option placeholder-voice selected" data-voice="Minha voz">
+                <span class="voice-orb blue"><span>MA</span></span>
+                <span class="voice-copy"><strong>Minha voz</strong><small>Aguardando gravação</small></span>
+                <span class="check">•</span>
+              </button>
+              <button class="voice-option add-voice-option" id="addVoiceTile">
+                <span class="add-orb">＋</span><span class="voice-copy"><strong>Adicionar voz</strong><small>Com autorização</small></span>
+              </button>
+            </div>
+            <div class="profile-management">
+              <button id="editVoice" class="text-button" type="button" disabled>✎ Renomear perfil</button>
+              <button id="replaceVoice" class="text-button" type="button" disabled>↻ Alterar gravação</button>
+              <button id="deleteVoice" class="text-button danger-link" type="button" disabled>× Excluir perfil</button>
+            </div>
+            <div class="voice-foot"><span class="mini-wave">▂ ▄ ▆ ▃ ▇ ▄ ▂ ▅ ▃ ▆ ▂</span><span>Referência vocal selecionada</span><button id="previewVoice" class="tiny-link" type="button" disabled>▶ Testar clone</button><button id="manageVoice" class="tiny-link" type="button">Ver gravações</button></div>
+          </section>
+
+          <section class="card style-card">
+            <div class="section-heading">
+              <div><div class="eyebrow">02 / ESTILOS DO CLONE SELECIONADO</div><h2>Interpretação</h2></div>
+              <button id="saveStyle" class="text-button">♡ Salvar estilo</button>
+            </div>
+            <div class="style-grid" id="styleGrid">
+              <button class="style-option selected" data-style="Varejo"><span class="style-icon coral">↗</span><span><strong>Varejo</strong><small>Ágil · direto</small></span></button>
+              <button class="style-option" data-style="Institucional"><span class="style-icon violet">◈</span><span><strong>Institucional</strong><small>Seguro · pausado</small></span></button>
+              <button class="style-option" data-style="Documentário"><span class="style-icon cyan">◌</span><span><strong>Documentário</strong><small>Narrativo · profundo</small></span></button>
+              <button class="style-option" data-style="Rádio/TV"><span class="style-icon pink">⌁</span><span><strong>Rádio / TV</strong><small>Presença · clareza</small></span></button>
+              <button class="style-option" data-style="Impacto"><span class="style-icon red">✦</span><span><strong>Impacto</strong><small>Grave · marcante</small></span></button>
+              <button class="style-option custom-style" id="addStyle"><span class="add-orb small">＋</span><span><strong>Novo estilo</strong><small>Da sua gravação</small></span></button>
+            </div>
+            <div class="style-tuning">
+              <label>Ritmo <span id="paceValue">58%</span><input id="pace" type="range" min="0" max="100" value="58" /></label>
+              <label>Expressividade <span id="expressionValue">72%</span><input id="expression" type="range" min="0" max="100" value="72" /></label>
+              <label>Pausas <span id="pausesValue">42%</span><input id="pauses" type="range" min="0" max="100" value="42" /></label>
+            </div>
+          </section>
+
+          <section class="card script-card">
+            <div class="section-heading script-heading">
+              <div><div class="eyebrow">03 / TEXTO</div><h2>Escreva sua locução</h2></div>
+              <span class="counter" id="counter">0 caracteres</span>
+            </div>
+            <textarea id="script" maxlength="5000" placeholder="Digite ou cole o texto que deseja transformar em locução…&#10;&#10;Dica: use pontuação para orientar as pausas e a interpretação."></textarea>
+            <div class="script-footer"><span>Português · Brasil</span><span>As pausas acompanham a pontuação</span></div>
+          </section>
+
+          <div class="generate-row">
+            <div class="engine-status" id="engineStatus"><span class="status-ring" id="statusRing"></span><div><strong id="engineTitle">Verificando motor local…</strong><small id="engineDetail">A primeira configuração baixa os arquivos do modelo PT-BR.</small></div></div>
+            <button id="generate" class="generate-button" disabled><span>✦</span> Gerar locução</button>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="card waveform-card">
+            <div class="section-heading"><div><div class="eyebrow">MONITOR DE ÁUDIO</div><h2>Prévia</h2></div><span class="ready-tag" id="previewState"><i></i> AGUARDANDO</span></div>
+            <div class="wave-stage"><div class="wave-glow"></div><div class="waveform" aria-hidden="true"></div><button class="play-orb" id="playPreview" type="button" aria-label="Reproduzir prévia" disabled>▶</button><button class="stop-orb" id="stopPreview" type="button" aria-label="Parar áudio" disabled>■</button><span class="timecode" id="timecode">00:00 <i></i> 00:00</span></div>
+            <audio id="previewAudio" hidden></audio>
+            <div class="preview-caption"><span class="preview-icon">♫</span><span><strong id="previewTitle">Nenhuma locução gerada</strong><small id="previewDetail">Seu áudio aparecerá aqui para ouvir e baixar.</small></span></div>
+            <button class="export-button" id="exportAudio" disabled>↓ &nbsp; Exportar WAV</button>
+          </section>
+
+          <section class="card profile-card">
+            <div class="eyebrow">PERFIS SALVOS</div>
+            <div class="profile-title"><h2>Seu espaço criativo</h2><span class="count-pill" id="savedCount">0</span></div>
+            <p>Guarde combinações de voz e interpretação para recuperar sua assinatura em um clique.</p>
+            <button id="openProfiles" class="outline-button">＋ &nbsp; Criar perfil de voz</button>
+          </section>
+
+          <div class="privacy-note"><span>◈</span><p><strong>Privado por padrão.</strong> As gravações e os perfis ficam no seu computador.</p></div>
+        </aside>
+      </div>
+      <footer class="statusbar"><span>METTAVOX CLONNER <i>0.1.7</i></span><span><b></b> PROCESSAMENTO LOCAL</span><span>MODELO: EM AVALIAÇÃO</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="voiceDialog" class="style-dialog">
+    <form id="voiceForm" method="dialog">
+      <div class="eyebrow">NOVO PERFIL DE VOZ</div>
+      <h2>Nomeie esta voz</h2>
+      <p>Escolha um nome para identificar a voz. Em seguida, selecione uma gravação limpa de pelo menos 2 segundos. Use apenas uma gravação sua ou autorizada.</p>
+      <label class="dialog-label" for="voiceName">Nome do perfil</label>
+      <input id="voiceName" name="voiceName" type="text" maxlength="50" placeholder="Ex.: Clone Mariano ou Clone Edna" autocomplete="off" required />
+      <label class="consent-row"><input id="voiceConsent" type="checkbox" /><span>Confirmo que sou a pessoa gravada ou tenho autorização para clonar esta voz.</span></label>
+      <div class="dialog-actions"><button id="cancelVoice" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Escolher gravação</button></div>
+    </form>
+  </dialog>
+  <dialog id="draftDialog" class="style-dialog draft-dialog">
+    <div class="eyebrow">PRÉVIA ANTES DE SALVAR</div>
+    <h2 id="draftTitle">Teste o clone</h2>
+    <p id="draftDescription">O perfil só será salvo depois que você ouvir a frase sintetizada. A primeira geração baixa e carrega o motor no computador.</p>
+    <div class="draft-status" id="draftStatus">Aguardando prévia da voz.</div>
+    <audio id="draftAudio" hidden></audio>
+    <div class="draft-actions">
+      <button id="draftGenerate" type="button" class="outline-button">✦ Gerar prévia</button>
+      <button id="draftListen" type="button" class="outline-button" disabled>▶ Ouvir prévia</button>
+      <button id="draftStop" type="button" class="outline-button" disabled>■ Parar</button>
+    </div>
+    <div class="dialog-actions">
+      <button id="cancelDraft" type="button" class="outline-button">Cancelar</button>
+      <button id="changeDraftAudio" type="button" class="outline-button">Trocar gravação</button>
+      <button id="saveDraftVoice" type="button" class="generate-button" disabled>Salvar perfil</button>
+    </div>
+  </dialog>
+  <dialog id="editVoiceDialog" class="style-dialog">
+    <form id="editVoiceForm" method="dialog">
+      <div class="eyebrow">EDITAR PERFIL DE VOZ</div>
+      <h2>Renomeie este perfil</h2>
+      <p>A gravação de referência permanece salva.</p>
+      <label class="dialog-label" for="editVoiceName">Nome do perfil</label>
+      <input id="editVoiceName" name="editVoiceName" type="text" maxlength="50" autocomplete="off" required />
+      <div class="dialog-actions"><button id="cancelEditVoice" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Salvar nome</button></div>
+    </form>
+  </dialog>
+  <audio id="referenceAudio" hidden></audio>
+  <dialog id="styleDialog" class="style-dialog">
+    <form id="styleForm" method="dialog">
+      <div class="eyebrow">NOVO ESTILO DE LOCUÇÃO</div>
+      <h2>Nomeie sua interpretação</h2>
+      <p>Depois de confirmar, escolha uma gravação limpa da mesma pessoa do perfil selecionado. Essa amostra será usada como referência vocal deste estilo.</p>
+      <label class="dialog-label" for="styleName">Nome do estilo</label>
+      <input id="styleName" name="styleName" maxlength="40" placeholder="Ex.: Comercial de impacto" autocomplete="off" required />
+      <label class="consent-row"><input id="styleConsent" type="checkbox" /><span>Confirmo que tenho autorização para usar essa gravação e que ela corresponde à voz do perfil selecionado.</span></label>
+      <div class="dialog-actions"><button id="cancelStyle" type="button" class="outline-button">Cancelar</button><button type="submit" class="generate-button">Continuar para escolher áudio</button></div>
+    </form>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>
